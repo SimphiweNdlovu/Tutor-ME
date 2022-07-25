@@ -1,3 +1,9 @@
+[![Flutter CI/CD Tests](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/flutter.yml/badge.svg)](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/flutter.yml)
+[![.NET core FileSystemAPI.yml CI/CD Tests](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/FileSystemAPI.yml/badge.svg)](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/FileSystemAPI.yml)
+[![.NET core TutorMeApi.yml CI/CD Tests](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/TutorMeApi.yml/badge.svg)](https://github.com/COS301-SE-2022/Tutor-ME/actions/workflows/TutorMeApi.yml )
+<div><img alt="GitHub language count" src="https://img.shields.io/github/languages/count/COS301-SE-2022/Tutor-ME?style=plastic">
+<img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/COS301-SE-2022/Tutor-ME?style=plastic">
+<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/COS301-SE-2022/Tutor-ME?color=pink&style=plastic"></div>
 <a href= "https://github.com/COS301-SE-2022/Tutor-ME/pulls">
   <img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/COS301-SE-2022/Tutor-ME?style=plastic">
 </a>
@@ -7,9 +13,12 @@
 <a href = "https://github.com/COS301-SE-2022/Tutor-ME/projects/1">
   <img alt="GitHub issues" src="https://img.shields.io/badge/Project%20Board-1-purple">
 </a>
-<div><img alt="GitHub language count" src="https://img.shields.io/github/languages/count/COS301-SE-2022/Tutor-ME?style=plastic">
-<img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/COS301-SE-2022/Tutor-ME?style=plastic">
-<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/COS301-SE-2022/Tutor-ME?color=pink&style=plastic"></div>
+
+![image](https://img.shields.io/badge/Dart-02569B?style=for-the-badge&logo=dart&logoColor=white)
+![image](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![image](https://img.shields.io/badge/dotnet-02569B?style=for-the-badge&logo=dotnet&logoColor=white)
+
+![image](https://img.shields.io/badge/Microsoft%20SQL%20Server-Database-blue)
 
 <h1 align="center"> CapsOn </h1> <br>
 <p align="center"> 
@@ -34,9 +43,24 @@ modules or subjects,
 - Video calling functionality in-app to allow students to virtually meet After implementing these core functionalities of this project, we would start looking at
 additional functionalities like filtering tutors by gender to enable students to choose someone that they are comfortable with. We would also look into implementing a dark mode of the app for users that prefer it over light mode. The project will be implemented as a cross platform mobile app for Android and iOS.
 
+# Demo 1
+## [Recorded Demo](https://drive.google.com/file/d/16WFDqOZ3tqesce0W2QBPpVktkZrKXXwX/view?usp=sharing)
+## [SRS Document](https://github.com/COS301-SE-2022/Tutor-ME/blob/12a701224538648bcd7ad0ad158007bd9333bf34/SRS%20Document%20-%20Tutor%20Me.pdf)
+
+# Demo 2
+## [Recorded Demo](https://drive.google.com/file/d/1hTISZ-U-yt9QYR98D6VlQrEmZEccTBkQ/view?usp=sharing)
+## [SRS Document](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/SRS%20Document%20-%20Tutor%20Me%20v2.pdf)
+## [Architectural Requirements](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/Architectural%20Development.pdf)
+## [Coding Standards Document](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/Coding%20standards%20document.pdf)
+## [User Manual](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/User%20Manual%20TutorMe-1.pdf)
+## [Sprint Planning](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/Sprint%20Planning%20And%20Burndown%20Charts%20-1.pdf)
+## Project Boards:
+> > > ### [GitHub Project Board](https://github.com/COS301-SE-2022/Tutor-ME/projects/1)
+> > > ### [Trello Project Board](https://trello.com/b/R58mrioT/tutor-me)
+
+# Demo 3
 ## [Recorded Demo]()
-## [Funtional Requirements]()
-## [GitHub Project Board](https://github.com/COS301-SE-2022/Tutor-ME/projects/1)
+## [Technical Installation Document](https://github.com/COS301-SE-2022/Tutor-ME/blob/develop/assets/Technical%20installation%20manual.pdf)
 
 ## Project Technologies
 - Frontend: Flutter(Dart)

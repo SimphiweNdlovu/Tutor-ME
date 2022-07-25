@@ -1,0 +1,4 @@
+{
+    "dotnet-test-explorer.testProjectPath": "**/*ApiUnitTests.csproj",
+    "cmake.configureOnOpen": true
+}

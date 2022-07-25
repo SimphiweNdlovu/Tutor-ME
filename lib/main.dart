@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+// import 'package:tutor_me/src/authenticate/register_or_login.dart';
+// import 'src/settings/settings_controller.dart';
+// import 'src/settings/settings_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'src/authenticate/register_or_login.dart';
+// import 'src/tutorAndTuteeCollaboration/tutorGroups/tutor_remove_participants.dart';
 
-import 'src/app.dart';
-import 'src/settings/settings_controller.dart';
-import 'src/settings/settings_service.dart';
+// import 'src/app.dart';
 
 void main() async {
-  // Set up the SettingsController, which will glue user settings to multiple
-  // Flutter Widgets.
-  final settingsController = SettingsController(SettingsService());
+  // await TuteeServices().sendRequest('6b85813b-7c2d-45da-ab35-0b18d47b1327', '887d2493-c136-4ec1-800b-f2c68e762367');
+  // await TutorServices().acceptRequest('6666EB8B-2AE2-4872-9595-9830C8912243');
 
-  // Load the user's preferred theme while the splash screen is displayed.
-  // This prevents a sudden theme change when the app is first displayed.
-  await settingsController.loadSettings();
+  // final settingsController = SettingsController(SettingsService());
+  await dotenv.load(fileName: ".env");
 
-  // Run the app and pass in the SettingsController. The app listens to the
-  // SettingsController for changes, then passes it further down to the
-  // SettingsView.
-  runApp(MyApp(settingsController: settingsController));
+  // await settingsController.loadSettings();
+
+  runApp(const MaterialApp(home: RegisterOrLogin()));
 }
