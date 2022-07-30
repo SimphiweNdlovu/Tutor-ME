@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tutor_me/services/models/tutees.dart';
 import 'package:tutor_me/src/colorpallete.dart';
+import 'package:tutor_me/src/pages/%20call_history.dart';
+import 'package:tutor_me/src/theme/themes.dart';
 import 'package:tutor_me/src/tutorAndTuteeCollaboration/tuteeGroups/tutee_groups.dart';
 import 'Navigation/tutee_nav_drawer.dart';
 // import 'theme/themes.dart';
-import 'pages/calls_page.dart';
 import 'pages/tutors_list.dart';
 import 'pages/chats_page.dart';
 
@@ -26,6 +28,23 @@ class TuteePageState extends State<TuteePage> {
 
   @override
   Widget build(BuildContext context) {
+     final provider = Provider.of<ThemeProvider>(context,listen: false);
+    Color appBarColor1 ;
+    Color appBarColor2;
+    Color highlightColor;
+    if(provider.themeMode == ThemeMode.dark)
+    {
+      appBarColor1 = colorDarkGrey;
+      appBarColor2 = colorGrey ;
+      highlightColor = colorOrange;
+    }
+    else
+    {
+      appBarColor1 = Colors.red;
+      appBarColor2 = Colors.orange ;
+      highlightColor = colorTurqoise;
+    }
+    
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -67,11 +86,11 @@ class TuteePageState extends State<TuteePage> {
           centerTitle: true,
           title: const Text('Tutor Me'),
           flexibleSpace: Container(
-            decoration: const BoxDecoration(
+            decoration:  BoxDecoration(
                 // borderRadius:
                 //     BorderRadius.vertical(bottom: Radius.circular(60)),
                 gradient: LinearGradient(
-                    colors: <Color>[Colors.orange, Colors.red],
+                    colors: <Color>[appBarColor1, appBarColor2 ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter)),
           ),
@@ -83,7 +102,7 @@ class TuteePageState extends State<TuteePage> {
           children: <Widget>[
             Chats(user: widget.user),
             TuteeGroups(tutee: widget.user),
-            const Calls(),
+            const CallHistory(),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -100,7 +119,7 @@ class TuteePageState extends State<TuteePage> {
             color: Colors.white,
           ),
           label: const Text('Request Tutor'),
-          backgroundColor: colorTurqoise.withOpacity(0.8),
+          backgroundColor: highlightColor.withOpacity(0.8),
           splashColor: colorOrange,
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
