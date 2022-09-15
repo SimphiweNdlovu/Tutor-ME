@@ -1,14 +1,16 @@
 // ignore_for_file: file_names
 import 'package:flutter/material.dart';
+import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/services/models/groups.dart';
-import 'package:tutor_me/services/services/group_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import '../../../services/models/tutors.dart';
+import '../../../services/models/modules.dart';
+import '../../../services/services/group_services.dart';
+import '../../../services/services/module_services.dart';
 import '../../Groups/tutor_group.dart';
 
 class TutorGroups extends StatefulWidget {
-  final Tutors tutor;
-  const TutorGroups({Key? key, required this.tutor}) : super(key: key);
+  final Globals globals;
+  const TutorGroups({Key? key, required this.globals}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -19,27 +21,56 @@ class TutorGroups extends StatefulWidget {
 class TutorGroupsState extends State<TutorGroups> {
   List<Groups> groups = List<Groups>.empty();
   List<int> numTutees = List<int>.empty(growable: true);
+  List<Modules> modules = List<Modules>.empty(growable: true);
+  String images =
+      'https://cdn.pixabay.com/photo/2018/09/27/09/22/artificial-intelligence-3706562_960_720.jpg';
   bool hasGroups = false;
   bool isLoading = true;
+  final numTuteesForEachGroup = <int>[];
 
+  int numOfTutees = 3;
   getGroupDetails() async {
-    final incomingGroups =
-        await GroupServices.getGroupByUserID(widget.tutor.getId, 'tutor');
-    groups = incomingGroups;
+    try {
+      final incomingGroups = await GroupServices.getGroupByUserID(
+          widget.globals.getUser.getId, widget.globals);
 
-    if (groups.isNotEmpty) {
-      setState(() {
+      groups = incomingGroups;
+      if (groups.isNotEmpty) {
         hasGroups = true;
+
+        for (int k = 0; k < numTuteesForEachGroup.length; k++) {
+          k.toString() + " 's # tutees " + numTuteesForEachGroup[k].toString();
+        }
+        setState(() {
+          groups = incomingGroups;
+          numOfTutees = numOfTutees;
+        });
+        getGroupModules();
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
       });
     }
-    for (int i = 0; i < groups.length; i++) {
-      List<String> tutees = groups[i].getTutees.split(',');
-      numTutees.add(tutees.length);
-    }
+  }
 
+  getGroupModules() async {
+    try {
+      for (int i = 0; i < groups.length; i++) {
+        final incomingModules = await ModuleServices.getModule(
+            groups[i].getModuleId, widget.globals);
+        modules.add(incomingModules);
+      }
+    } catch (e) {
+      const snack = SnackBar(content: Text('Error loading modules'));
+      ScaffoldMessenger.of(context).showSnackBar(snack);
+    }
     setState(() {
       isLoading = false;
-      groups = incomingGroups;
     });
   }
 
@@ -64,7 +95,7 @@ class TutorGroupsState extends State<TutorGroups> {
                             Icon(
                               Icons.people,
                               size: MediaQuery.of(context).size.height * 0.1,
-                              color: colorTurqoise,
+                              color: colorOrange,
                             ),
                             const Text("No Groups Found")
                           ])
@@ -93,14 +124,15 @@ class TutorGroupsState extends State<TutorGroups> {
         Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => TutorGroupPage(
                   group: groups[i],
-                  tutor: widget.tutor,
+                  globals: widget.globals,
+                  module: modules[i],
                 )));
       },
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.25,
         decoration: BoxDecoration(
-          color: colorTurqoise,
+          color: colorOrange,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
@@ -120,18 +152,18 @@ class TutorGroupsState extends State<TutorGroups> {
             Row(
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-                Text("  " + groups[i].getModuleCode,
+                Text("  " + modules[i].getCode,
                     style: TextStyle(
-                      fontSize: MediaQuery.of(context).size.width * 0.06,
+                      fontSize: MediaQuery.of(context).size.height * 0.06,
                       color: colorWhite,
                       fontWeight: FontWeight.bold,
                     )),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.110),
-                const Icon(Icons.circle, size: 7, color: colorOrange),
+                const Icon(Icons.circle, size: 7, color: colorBlueTeal),
                 SizedBox(width: MediaQuery.of(context).size.width * 0.03),
-                Text(
-                  numTutees[i].toString() + " participants(s)",
-                  style: const TextStyle(
+                const Text(
+                  "2 participants(s)",
+                  style: TextStyle(
                       color: Colors.white70, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -140,9 +172,9 @@ class TutorGroupsState extends State<TutorGroups> {
               height: MediaQuery.of(context).size.height * 0.01,
             ),
             Text(
-              "  " + groups[i].getModuleName,
+              "  " + modules[i].getModuleName,
               style: TextStyle(
-                fontSize: MediaQuery.of(context).size.width * 0.05,
+                fontSize: MediaQuery.of(context).size.height * 0.05,
                 color: colorWhite,
               ),
             )

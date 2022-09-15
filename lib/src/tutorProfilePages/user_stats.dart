@@ -4,7 +4,7 @@ import 'package:tutor_me/src/colorpallete.dart';
 import 'package:tutor_me/src/theme/themes.dart';
 
 class UserStats extends StatelessWidget {
-  final String rating;
+  final int rating;
   final int numConnections;
   final int numTutees;
 
@@ -16,34 +16,34 @@ class UserStats extends StatelessWidget {
       : super(key: key);
 
   int convertRating() {
-    List<String> rat = rating.split(',');
-    return int.parse(rat[0]);
+    return rating;
   }
 
   @override
   Widget build(BuildContext context) {
     int rating = convertRating();
 
-     final provider = Provider.of<ThemeProvider>(context,listen: false);
- 
-    Color secondaryTextColor ;
-    
-    if(provider.themeMode == ThemeMode.dark)
-    {
+    final provider = Provider.of<ThemeProvider>(context, listen: false);
+
+    Color secondaryTextColor;
+
+    if (provider.themeMode == ThemeMode.dark) {
       secondaryTextColor = colorGrey;
-    }
-    else
-    {
-      secondaryTextColor = colorTurqoise;
+    } else {
+      secondaryTextColor = colorOrange;
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         buildButton(text: 'Rating', value: rating, color: secondaryTextColor),
         buildDivider(),
-        buildButton(text: '  Tutors', value: numTutees, color: secondaryTextColor),
+        buildButton(
+            text: '  Tutors', value: numTutees, color: secondaryTextColor),
         buildDivider(),
-        buildButton(text: '  Connections', value: numConnections, color: secondaryTextColor),
+        buildButton(
+            text: '  Connections',
+            value: numConnections,
+            color: secondaryTextColor),
       ],
     );
   }
@@ -55,7 +55,8 @@ class UserStats extends StatelessWidget {
         width: 2,
       );
 
-  buildButton({required String text, required int value, required Color color}) {
+  buildButton(
+      {required String text, required int value, required Color color}) {
     return MaterialButton(
       padding: const EdgeInsets.symmetric(vertical: 4),
       onPressed: () {},
@@ -66,7 +67,7 @@ class UserStats extends StatelessWidget {
         children: <Widget>[
           Text(
             text,
-            style:  TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: color,
@@ -78,7 +79,7 @@ class UserStats extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.normal,
-              color: colorOrange,
+              color: colorBlueTeal,
             ),
           ),
         ],

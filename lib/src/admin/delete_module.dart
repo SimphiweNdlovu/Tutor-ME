@@ -2,11 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:tutor_me/src/colorpallete.dart';
+import '../../services/models/globals.dart';
 import '../components.dart';
 import '../../services/services/module_services.dart';
 
 class DeleteModule extends StatefulWidget {
-  const DeleteModule({Key? key}) : super(key: key);
+  final Globals global;
+  const DeleteModule({Key? key, required this.global}) : super(key: key);
 
   @override
   DeleteModuleState createState() => DeleteModuleState();
@@ -20,6 +22,13 @@ class DeleteModuleState extends State<DeleteModule> {
   bool isLoading = false;
   @override
   Widget build(BuildContext context) {
+    double widthOfScreen = MediaQuery.of(context).size.width;
+    double textBoxWidth = MediaQuery.of(context).size.width * 0.4 * 2;
+    double buttonWidth = MediaQuery.of(context).size.width * 0.8;
+    if (widthOfScreen >= 600.0) {
+      buttonWidth = buttonWidth / 2;
+      textBoxWidth = textBoxWidth / 2;
+    }
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -34,7 +43,7 @@ class DeleteModuleState extends State<DeleteModule> {
             child: Container(
               decoration: const BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/Pictures/register_login.jpg"),
+                      image: AssetImage("assets/Pictures/Admin_Background.jpg"),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
                         Colors.black54,
@@ -43,6 +52,10 @@ class DeleteModuleState extends State<DeleteModule> {
             ),
           ),
           Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+            ),
             backgroundColor: Colors.transparent,
             body: Column(children: [
               const Flexible(
@@ -76,12 +89,15 @@ class DeleteModuleState extends State<DeleteModule> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  TextInputField(
-                    icon: Icons.book,
-                    hint: 'Module Code',
-                    inputType: TextInputType.text,
-                    inputAction: TextInputAction.done,
-                    inputController: idcontroller,
+                  SizedBox(
+                    width: textBoxWidth,
+                    child: TextInputField(
+                      icon: Icons.book,
+                      hint: 'Module Code',
+                      inputType: TextInputType.text,
+                      inputAction: TextInputAction.done,
+                      inputController: idcontroller,
+                    ),
                   ),
                 ],
               ),
@@ -90,10 +106,11 @@ class DeleteModuleState extends State<DeleteModule> {
               ),
               Container(
                 height: MediaQuery.of(context).size.height * 0.06,
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: buttonWidth,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: colorOrange,
+                  color: colorBlack,
+                  border: Border.all(color: colorWhite),
                 ),
                 child: TextButton(
                   onPressed: () async {
@@ -114,7 +131,7 @@ class DeleteModuleState extends State<DeleteModule> {
                             content: Text(errMsg),
                             backgroundColor: colorWhite,
                             titleTextStyle: TextStyle(
-                              color: colorOrange,
+                              color: colorBlack,
                               fontSize:
                                   MediaQuery.of(context).size.height * 0.03,
                               fontWeight: FontWeight.bold,
@@ -134,7 +151,8 @@ class DeleteModuleState extends State<DeleteModule> {
                         },
                       );
                     }
-                    ModuleServices.deleteModule(idcontroller.text);
+                    ModuleServices.deleteModule(
+                        idcontroller.text, widget.global);
                   },
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)

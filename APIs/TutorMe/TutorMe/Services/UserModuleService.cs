@@ -1,12 +1,15 @@
-﻿using TutorMe.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using TutorMe.Data;
+using TutorMe.Entities;
 using TutorMe.Models;
 
 namespace TutorMe.Services {
 
     public interface IUserModuleService {
         IEnumerable<UserModule> GetAllUserModules();
+        IEnumerable<Module> GetUserModulesByUserId(Guid id);
         UserModule GetUserModuleById(Guid id);
-        Guid createUserModule(UserModule userModule);
+        Guid createUserModule(IUserModule userModule);
         bool deleteUserModuleById(Guid id);
     }
     public class UserModuleServices: IUserModuleService {
@@ -16,7 +19,7 @@ namespace TutorMe.Services {
         }
 
         public IEnumerable<UserModule> GetAllUserModules() {
-            return _context.UserModule;
+            return _context.UserModule.ToList();
         }
 
         public UserModule GetUserModuleById(Guid id) {
@@ -26,14 +29,29 @@ namespace TutorMe.Services {
             }
             return userModule;
         }
-        public Guid createUserModule(UserModule userModule) {
-            if (_context.UserModule.Where(e => e.UserId == userModule.UserId && e.ModuleId == userModule.ModuleId).Any()) {
+        public Guid createUserModule(IUserModule userModuleInput) {
+            if (_context.UserModule.Where(e => e.UserId == userModuleInput.UserId && e.ModuleId == userModuleInput.ModuleId).Any()) {
                 throw new KeyNotFoundException("This UserModule already exists");
             }
+            var userModule = new UserModule();
             userModule.UserModuleId = Guid.NewGuid();
+            userModule.UserId = userModuleInput.UserId;
+            userModule.ModuleId = userModuleInput.ModuleId;
             _context.UserModule.Add(userModule);
             _context.SaveChanges();
             return userModule.UserModuleId;
+        }
+
+        public IEnumerable<Module> GetUserModulesByUserId(Guid id) {
+            var userModules = _context.UserModule.Include(e=>e.Module).Where(e => e.UserId == id);
+            if(userModules == null) {
+                throw new KeyNotFoundException("User Module Record not found.");
+            }
+            var modules = new List<Module>();
+            foreach (UserModule item in userModules) {
+                modules.Add(item.Module);
+            }
+            return modules;
         }
 
         public bool deleteUserModuleById(Guid id) {

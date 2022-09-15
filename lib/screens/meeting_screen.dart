@@ -1,11 +1,10 @@
 import 'dart:developer';
-
-import 'package:tutor_me/src/authenticate/register_or_login.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tutor_me/src/colorpallete.dart';
 import 'package:videosdk/rtc.dart';
+import '../src/authenticate/register_step1.dart';
 import '/screens/chat_screen.dart';
 
 import '../../navigator_key.dart';
@@ -125,13 +124,14 @@ class _MeetingScreenState extends State<MeetingScreen> {
           if (provider.themeMode == ThemeMode.dark) {
             themeColor = Colors.grey.shade800;
           } else {
-            themeColor = Colors.orange.shade900;
+            themeColor = Colors.grey.shade100;
           }
           return Scaffold(
             backgroundColor: themeColor,
             floatingActionButton: MeetingActionBar(
               isMicEnabled: audioStream != null,
               isWebcamEnabled: videoStream != null,
+              isRecordingOn: isRecordingOn,
               isScreenShareEnabled: shareStream != null,
               isScreenShareButtonDisabled: remoteParticipantShareStream != null,
               // Called when Call End button is pressed
@@ -175,6 +175,17 @@ class _MeetingScreenState extends State<MeetingScreen> {
                 }
               },
 
+              // Called when Recording button is pressed
+              onRecordingShareButtonPressed: () {
+                if (isRecordingOn == true) {
+                  _meeting.stopRecording();
+                  isRecordingOn = false;
+                } else {
+                  _meeting.startRecording(recordingWebHookURL);
+                  isRecordingOn = true;
+                }
+              },
+
               // Called when chat button is pressed
               onMoreButtonPressed: () {
                 // Showing chat screen
@@ -191,10 +202,12 @@ class _MeetingScreenState extends State<MeetingScreen> {
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerFloat,
             appBar: AppBar(
+              backgroundColor: colorBlueTeal,
               title: Text(widget.meetingId),
               actions: [
                 // Recording status
-                if (isRecordingOn) SvgPicture.asset("assets/recording_on.svg"),
+                if (isRecordingOn)
+                  SvgPicture.asset("assets/Pictures/recording.png"),
 
                 // Copy meeting id button
                 IconButton(
@@ -414,6 +427,6 @@ class _MeetingScreenState extends State<MeetingScreen> {
 
   void goToRegisterOrLogin(BuildContext context) {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const RegisterOrLogin()));
+        .push(MaterialPageRoute(builder: (context) => const RegisterStep1()));
   }
 }

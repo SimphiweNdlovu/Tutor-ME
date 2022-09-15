@@ -1,12 +1,15 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:tutor_me/services/services/tutor_services.dart';
+import 'package:tutor_me/services/models/globals.dart';
+import 'package:tutor_me/services/services/module_services.dart';
+import 'package:tutor_me/services/services/user_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import '../../services/models/tutees.dart';
+import '../../services/models/modules.dart';
+import '../../services/models/users.dart';
 import '../tutee_page.dart';
 import '../tutorProfilePages/tutor_profile_view.dart';
-import 'package:tutor_me/services/models/tutors.dart';
+// import 'package:tutor_me/services/models/tutors.dart';
 // import 'package:tutor_me/modules/api.services.dart';
 // import 'package:tutor_me/modules/tutors.dart';
 // import 'tutorProfilePages/tutor_profile_view.dart';
@@ -14,31 +17,31 @@ import 'package:tutor_me/services/models/tutors.dart';
 // import 'theme/themes.dart';
 
 class Tutor {
-  Tutors tutor;
-  Uint8List image;
-  bool hasImage;
+  Users tutor;
+  Uint8List image = Uint8List(128);
+  bool hasImage = false;
   Tutor(this.tutor, this.image, this.hasImage);
 }
 
-class TutorsList extends StatefulWidget {
-  final Tutees tutee;
-  const TutorsList({Key? key, required this.tutee}) : super(key: key);
+class TutorList extends StatefulWidget {
+  final Globals globals;
+  const TutorList({Key? key, required this.globals}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return TutorsListState();
+    return TutorListState();
   }
 }
 
-class TutorsListState extends State<TutorsList> {
+class TutorListState extends State<TutorList> {
   String query = '';
   final textControl = TextEditingController();
-  List<Tutors> tutorList = List<Tutors>.empty();
+  List<Users> tutorList = List<Users>.empty();
   List<Tutor> saveTutors = List<Tutor>.empty();
   List<Uint8List> tutorImages = List<Uint8List>.empty(growable: true);
   List<Tutor> tutors = List<Tutor>.empty(growable: true);
   List<int> hasImage = List<int>.empty(growable: true);
-  List<Tutors> connectedTutors = List<Tutors>.empty();
+  List<Users> connectedTutors = List<Users>.empty();
   double filterContHeight = 0.0;
   double filterContWidth = 0.0;
   bool collapsed = true;
@@ -97,7 +100,7 @@ class TutorsListState extends State<TutorsList> {
       final filteredTutors = tutors.where((tutor) {
         bool val = false;
         if (tutor.tutor.getDateOfBirth != '') {
-          String strAge = tutor.tutor.getAge;
+          String strAge = tutor.tutor.getDateOfBirth;
           int age = int.parse(strAge);
           if (age >= 36) {
             val = true;
@@ -146,24 +149,28 @@ class TutorsListState extends State<TutorsList> {
   }
 
   getTutors() async {
-    final tutors = await TutorServices.getTutors();
-    tutorList = tutors;
-
-    getConnections();
+    try {
+      final tutors = await UserServices.getTutors(widget.globals);
+      tutorList = tutors;
+      getConnections();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   getConnections() async {
-    List<int> indecies = List<int>.empty(growable: true);
-    int tutorLength = tutorList.length;
-    if (!widget.tutee.getConnections.contains('No connections added')) {
-      List<String> connections = widget.tutee.getConnections.split(',');
-      int conLength = connections.length;
-      for (int i = 0; i < conLength; i++) {
-        final tutor = await TutorServices.getTutor(connections[i]);
-        setState(() {
-          connectedTutors += tutor;
-        });
-      }
+    try {
+      List<int> indecies = List<int>.empty(growable: true);
+      int tutorLength = tutorList.length;
+
+      final tutors = await UserServices.getConnections(widget.globals.getUser.getId, widget.globals);
+
+      setState(() {
+        connectedTutors = tutors;
+      });
+
       for (int i = 0; i < tutorLength; i++) {
         for (int j = 0; j < connectedTutors.length; j++) {
           if (tutorList[i].getId == connectedTutors[j].getId) {
@@ -171,92 +178,109 @@ class TutorsListState extends State<TutorsList> {
           }
         }
       }
-    }
+      List<Modules> tuteeModules = List<Modules>.empty();
+      final tuteeModuleList =
+          await ModuleServices.getUserModules(widget.globals.getUser.getId, widget.globals);
+      tuteeModules = tuteeModuleList;
+      for (int i = 0; i < tutorLength; i++) {
+        bool val = false;
+        if (tuteeModules.isNotEmpty) {
+          List<Modules> tutorModules = List<Modules>.empty();
+          final tutorModuleList =
+              await ModuleServices.getUserModules(tutorList[i].getId, widget.globals);
+          tutorModules = tutorModuleList;
 
-    List<String> tuteeModules = widget.tutee.getModules.split(',');
-    for (int i = 0; i < tutorLength; i++) {
-      bool val = false;
-      if (!tutorList[i].getModules.contains('No modules added')) {
-        List<String> tutorModules = tutorList[i].getModules.split(',');
-
-        for (int k = 0; k < tutorModules.length; k++) {
-          for (int l = 0; l < tuteeModules.length; l++) {
-            if (tutorModules[k] == tuteeModules[l]) {
-              val = true;
+          for (int k = 0; k < tutorModules.length; k++) {
+            for (int l = 0; l < tuteeModules.length; l++) {
+              if (tutorModules[k].getCode == tuteeModules[l].getCode) {
+                val = true;
+              }
             }
           }
         }
+
+        if (!val) {
+          indecies.add(i);
+        }
       }
 
-      if (!val) {
-        indecies.add(i);
-      }
-    }
+      if (tuteeModules.isEmpty) {
+        setState(() {
+          tutorList = List<Users>.empty();
+        });
+        const snackBar = SnackBar(
+          content: Text('No Tutor suggestions'),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      } else {
+        List<Users> tempList = List<Users>.empty(growable: true);
 
-    if (widget.tutee.getModules.contains('No modules added')) {
-      setState(() {
-        tutorList = List<Tutors>.empty();
-      });
-      const snackBar = SnackBar(
-        content: Text('No Tutor suggestions'),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    } else {
-      List<Tutors> tempList = List<Tutors>.empty(growable: true);
-
-      for (int i = 0; i < tutorList.length; i++) {
-        bool toAdd = true;
-        for (int j = 0; j < indecies.length; j++) {
-          if (i == indecies[j]) {
-            toAdd = false;
+        for (int i = 0; i < tutorList.length; i++) {
+          bool toAdd = true;
+          for (int j = 0; j < indecies.length; j++) {
+            if (i == indecies[j]) {
+              toAdd = false;
+            }
+          }
+          if (toAdd) {
+            tempList.add(tutorList[i]);
           }
         }
-        if (toAdd) {
-          tempList.add(tutorList[i]);
-        }
+        setState(() {
+          tutorList = tempList;
+        });
+      }
+    } catch (e) {
+      for (var tutor in tutorList) {
+        tutors.add(Tutor(tutor, Uint8List(128), false));
       }
       setState(() {
-        tutorList = tempList;
+        _isLoading = false;
       });
+      // getTutorProfileImages();
     }
-
-    getTutorProfileImages();
   }
 
   getTutorProfileImages() async {
-    for (int i = 0; i < tutorList.length; i++) {
-      try {
-        final image =
-            await TutorServices.getTutorProfileImage(tutorList[i].getId);
-        setState(() {
-          tutorImages.add(image);
-        });
-      } catch (e) {
-        final byte = Uint8List(128);
-        tutorImages.add(byte);
-        hasImage.add(i);
+    try {
+      for (int i = 0; i < tutorList.length; i++) {
+        try {
+          final image = await UserServices.getProfileImage(tutorList[i].getId, widget.globals);
+          setState(() {
+            tutorImages.add(image);
+          });
+        } catch (e) {
+          final byte = Uint8List(128);
+          tutorImages.add(byte);
+          hasImage.add(i);
+        }
       }
-    }
-    for (int i = 0; i < tutorList.length; i++) {
-      setState(() {
-        bool val = true;
-        for (int j = 0; j < hasImage.length; j++) {
-          if (hasImage[j] == i) {
-            val = false;
-            break;
+      for (int i = 0; i < tutorList.length; i++) {
+        setState(() {
+          bool val = true;
+          for (int j = 0; j < hasImage.length; j++) {
+            if (hasImage[j] == i) {
+              val = false;
+              break;
+            }
           }
-        }
-        if (!val) {
-          tutors.add(Tutor(tutorList[i], tutorImages[i], false));
-        } else {
-          tutors.add(Tutor(tutorList[i], tutorImages[i], true));
-        }
+          if (!val) {
+            tutors.add(Tutor(tutorList[i], tutorImages[i], false));
+          } else {
+            tutors.add(Tutor(tutorList[i], tutorImages[i], true));
+          }
+        });
+      }
+      setState(() {
+        saveTutors = tutors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        saveTutors = tutors;
+        _isLoading = false;
       });
     }
-    setState(() {
-      saveTutors = tutors;
-      _isLoading = false;
-    });
   }
 
   @override
@@ -275,61 +299,42 @@ class TutorsListState extends State<TutorsList> {
         children: [
           Container(
             width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height * 0.3,
+            height: MediaQuery.of(context).size.height * 0.26,
             decoration: const BoxDecoration(
                 // borderRadius:
                 //     BorderRadius.vertical(botCentertom: Radius.circular(60)),
                 image: DecorationImage(
-              image: AssetImage("assets/Pictures/tutorus.jpg"),
+              image: AssetImage("assets/Pictures/book.jpg"),
               fit: BoxFit.fill,
             )),
             child: Column(children: <Widget>[
               Container(
-                  padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).size.height * 0.03,
-                      bottom: MediaQuery.of(context).size.height * 0.1,
-                      right: MediaQuery.of(context).size.width * 0.8),
-                  child: GestureDetector(
-                    onTap: () => {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                TuteePage(user: widget.tutee)),
-                      ),
-                    },
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: colorWhite,
-                      size: MediaQuery.of(context).size.width * 0.1,
+                padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).size.height * 0.03,
+                    bottom: MediaQuery.of(context).size.height * 0.1,
+                    right: MediaQuery.of(context).size.width * 0.8),
+                child: GestureDetector(
+                  onTap: () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              TuteePage(globals: widget.globals)),
                     ),
-                  )),
+                  },
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: colorWhite,
+                    size: MediaQuery.of(context).size.width * 0.1,
+                  ),
+                ),
+              ),
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.02,
               ),
               Padding(
                 padding: EdgeInsets.only(
                     right: MediaQuery.of(context).size.width * 0.25),
-                child: Column(
-                  children: [
-                    Text(
-                      "Request For A Tutor",
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width * 0.070,
-                        fontWeight: FontWeight.bold,
-                        color: colorWhite,
-                      ),
-                      textAlign: TextAlign.left,
-                    ),
-                    Text(
-                      "     View & send a request to tutors...",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: MediaQuery.of(context).size.width * 0.046,
-                          color: const Color.fromARGB(255, 255, 153, 0)),
-                    )
-                  ],
-                ),
               ),
             ]),
           ),
@@ -337,6 +342,24 @@ class TutorsListState extends State<TutorsList> {
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.02,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                      left: MediaQuery.of(context).size.height * 0.02),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Request for a Tutor",
+                      style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.height * 0.035,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Montserrat',
+                          fontStyle: FontStyle.normal),
+                    ),
+                  ),
+                ),
                 Row(
                   children: <Widget>[
                     Container(
@@ -347,7 +370,7 @@ class TutorsListState extends State<TutorsList> {
                       width: MediaQuery.of(context).size.width * 0.8,
                       height: MediaQuery.of(context).size.height * 0.06,
                       child: TextField(
-                        cursorColor: colorOrange,
+                        cursorColor: colorBlueTeal,
                         onChanged: (value) => search(value),
                         controller: textControl,
                         decoration: InputDecoration(
@@ -374,7 +397,7 @@ class TutorsListState extends State<TutorsList> {
                                 : null,
                             border: OutlineInputBorder(
                               borderSide: const BorderSide(
-                                  color: colorOrange, width: 1.0),
+                                  color: colorBlueTeal, width: 1.0),
                               borderRadius: BorderRadius.circular(15),
                             ),
                             hintStyle: const TextStyle(
@@ -386,8 +409,8 @@ class TutorsListState extends State<TutorsList> {
                     IconButton(
                       icon: Icon(
                         Icons.filter_list,
-                        size: MediaQuery.of(context).size.width * 0.09,
-                        color: colorBlack,
+                        size: MediaQuery.of(context).size.width * 0.095,
+                        color: colorBlueTeal,
                       ),
                       onPressed: () {
                         setState(() {
@@ -416,7 +439,7 @@ class TutorsListState extends State<TutorsList> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               FilterChip(
-                                selectedColor: colorTurqoise.withOpacity(0.5),
+                                selectedColor: colorOrange.withOpacity(0.5),
                                 label: Text(
                                   'Male',
                                   style: TextStyle(color: checkedColor),
@@ -424,7 +447,7 @@ class TutorsListState extends State<TutorsList> {
                                 backgroundColor: Colors.white60,
                                 shape: StadiumBorder(
                                     side: BorderSide(color: checkedColor)),
-                                checkmarkColor: colorTurqoise,
+                                checkmarkColor: colorOrange,
                                 onSelected: (isSelected) {
                                   if (isFemaleSelected) {
                                     tutors = saveTutors;
@@ -433,7 +456,7 @@ class TutorsListState extends State<TutorsList> {
                                   filterGender(newGen);
                                   setState(() {
                                     if (isSelected) {
-                                      checkedColor = colorTurqoise;
+                                      checkedColor = colorOrange;
                                       const snackBar = SnackBar(
                                         content: Text('Filter option applied'),
                                       );
@@ -461,7 +484,7 @@ class TutorsListState extends State<TutorsList> {
                                   width:
                                       MediaQuery.of(context).size.width * 0.03),
                               FilterChip(
-                                selectedColor: colorTurqoise.withOpacity(0.5),
+                                selectedColor: colorOrange.withOpacity(0.5),
                                 label: Text(
                                   'Female',
                                   style: TextStyle(color: checkedColor),
@@ -469,7 +492,7 @@ class TutorsListState extends State<TutorsList> {
                                 backgroundColor: Colors.white60,
                                 shape: StadiumBorder(
                                     side: BorderSide(color: checkedColor)),
-                                checkmarkColor: colorTurqoise,
+                                checkmarkColor: colorOrange,
                                 onSelected: (isSelected) {
                                   if (isMaleSelected) {
                                     tutors = saveTutors;
@@ -478,7 +501,7 @@ class TutorsListState extends State<TutorsList> {
                                   filterGender(newGen);
                                   setState(() {
                                     if (isSelected) {
-                                      checkedColor = colorTurqoise;
+                                      checkedColor = colorOrange;
                                       const snackBar = SnackBar(
                                         content: Text('Filter option applied'),
                                       );
@@ -510,7 +533,7 @@ class TutorsListState extends State<TutorsList> {
                             child: Row(
                               children: <Widget>[
                                 FilterChip(
-                                  selectedColor: colorTurqoise.withOpacity(0.5),
+                                  selectedColor: colorOrange.withOpacity(0.5),
                                   label: Text(
                                     '16-18',
                                     style: TextStyle(color: checkedColor),
@@ -518,7 +541,7 @@ class TutorsListState extends State<TutorsList> {
                                   backgroundColor: Colors.white60,
                                   shape: StadiumBorder(
                                       side: BorderSide(color: checkedColor)),
-                                  checkmarkColor: colorTurqoise,
+                                  checkmarkColor: colorOrange,
                                   onSelected: (isSelected) {
                                     if (isSecondSelected ||
                                         isThirdSelected ||
@@ -531,7 +554,7 @@ class TutorsListState extends State<TutorsList> {
                                     filterAge(newAge);
                                     setState(() {
                                       if (isSelected) {
-                                        checkedColor = colorTurqoise;
+                                        checkedColor = colorOrange;
                                         const snackBar = SnackBar(
                                           content:
                                               Text('Filter option applied'),
@@ -557,7 +580,7 @@ class TutorsListState extends State<TutorsList> {
                                     width: MediaQuery.of(context).size.width *
                                         0.01),
                                 FilterChip(
-                                  selectedColor: colorTurqoise.withOpacity(0.5),
+                                  selectedColor: colorOrange.withOpacity(0.5),
                                   label: Text(
                                     '19-21',
                                     style: TextStyle(color: checkedColor),
@@ -565,7 +588,7 @@ class TutorsListState extends State<TutorsList> {
                                   backgroundColor: Colors.white60,
                                   shape: StadiumBorder(
                                       side: BorderSide(color: checkedColor)),
-                                  checkmarkColor: colorTurqoise,
+                                  checkmarkColor: colorOrange,
                                   onSelected: (isSelected) {
                                     if (isFirstSelected ||
                                         isThirdSelected ||
@@ -577,7 +600,7 @@ class TutorsListState extends State<TutorsList> {
                                     filterAge(newAge);
                                     setState(() {
                                       if (isSelected) {
-                                        checkedColor = colorTurqoise;
+                                        checkedColor = colorOrange;
                                         const snackBar = SnackBar(
                                           content:
                                               Text('Filter option applied'),
@@ -603,7 +626,7 @@ class TutorsListState extends State<TutorsList> {
                                     width: MediaQuery.of(context).size.width *
                                         0.01),
                                 FilterChip(
-                                  selectedColor: colorTurqoise.withOpacity(0.5),
+                                  selectedColor: colorOrange.withOpacity(0.5),
                                   label: Text(
                                     '22-25',
                                     style: TextStyle(color: checkedColor),
@@ -611,7 +634,7 @@ class TutorsListState extends State<TutorsList> {
                                   backgroundColor: Colors.white60,
                                   shape: StadiumBorder(
                                       side: BorderSide(color: checkedColor)),
-                                  checkmarkColor: colorTurqoise,
+                                  checkmarkColor: colorOrange,
                                   onSelected: (isSelected) {
                                     if (isFirstSelected ||
                                         isSecondSelected ||
@@ -623,7 +646,7 @@ class TutorsListState extends State<TutorsList> {
                                     filterAge(newAge);
                                     setState(() {
                                       if (isSelected) {
-                                        checkedColor = colorTurqoise;
+                                        checkedColor = colorOrange;
                                         const snackBar = SnackBar(
                                           content:
                                               Text('Filter option applied'),
@@ -649,7 +672,7 @@ class TutorsListState extends State<TutorsList> {
                                     width: MediaQuery.of(context).size.width *
                                         0.01),
                                 FilterChip(
-                                  selectedColor: colorTurqoise.withOpacity(0.5),
+                                  selectedColor: colorOrange.withOpacity(0.5),
                                   label: Text(
                                     '26-35',
                                     style: TextStyle(color: checkedColor),
@@ -657,7 +680,7 @@ class TutorsListState extends State<TutorsList> {
                                   backgroundColor: Colors.white60,
                                   shape: StadiumBorder(
                                       side: BorderSide(color: checkedColor)),
-                                  checkmarkColor: colorTurqoise,
+                                  checkmarkColor: colorOrange,
                                   onSelected: (isSelected) {
                                     if (isFirstSelected ||
                                         isSecondSelected ||
@@ -669,7 +692,7 @@ class TutorsListState extends State<TutorsList> {
                                     filterAge(newAge);
                                     setState(() {
                                       if (isSelected) {
-                                        checkedColor = colorTurqoise;
+                                        checkedColor = colorOrange;
                                         const snackBar = SnackBar(
                                           content:
                                               Text('Filter option applied'),
@@ -695,7 +718,7 @@ class TutorsListState extends State<TutorsList> {
                                     width: MediaQuery.of(context).size.width *
                                         0.01),
                                 FilterChip(
-                                  selectedColor: colorTurqoise.withOpacity(0.5),
+                                  selectedColor: colorOrange.withOpacity(0.5),
                                   label: Text(
                                     '36+',
                                     style: TextStyle(color: checkedColor),
@@ -703,7 +726,7 @@ class TutorsListState extends State<TutorsList> {
                                   backgroundColor: Colors.white60,
                                   shape: StadiumBorder(
                                       side: BorderSide(color: checkedColor)),
-                                  checkmarkColor: colorTurqoise,
+                                  checkmarkColor: colorOrange,
                                   onSelected: (isSelected) {
                                     if (isFirstSelected ||
                                         isSecondSelected ||
@@ -715,7 +738,7 @@ class TutorsListState extends State<TutorsList> {
                                     filterAge(newAge);
                                     setState(() {
                                       if (isSelected) {
-                                        checkedColor = colorTurqoise;
+                                        checkedColor = colorOrange;
                                         const snackBar = SnackBar(
                                           content:
                                               Text('Filter option applied'),
@@ -752,15 +775,33 @@ class TutorsListState extends State<TutorsList> {
                           child: CircularProgressIndicator.adaptive(),
                         ),
                       )
-                    : SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.60,
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        child: ListView.builder(
-                          // padding: const EdgeInsets.all(10),
-                          itemCount: tutors.length,
-                          itemBuilder: _cardBuilder,
-                        ),
-                      ),
+                    : tutors.isEmpty
+                        ? SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.50,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.person_add_disabled,
+                                    size: MediaQuery.of(context).size.height *
+                                        0.09,
+                                    color: colorOrange,
+                                  ),
+                                  const Text('No Tutors available')
+                                ],
+                              ),
+                            ),
+                          )
+                        : SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.60,
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: ListView.builder(
+                              // padding: const EdgeInsets.all(10),
+                              itemCount: tutors.length,
+                              itemBuilder: _cardBuilder,
+                            ),
+                          ),
               ])),
         ],
       ),
@@ -770,13 +811,12 @@ class TutorsListState extends State<TutorsList> {
   Widget _cardBuilder(BuildContext context, int i) {
     String name = tutors[i].tutor.getName;
     name += ' ' + tutors[i].tutor.getLastName;
-    String rating = tutors[i].tutor.getRating;
-    List<String> newRating = rating.split(',');
+    int rating = tutors[i].tutor.getRating;
     return GestureDetector(
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
-          // side: const BorderSide(color: colorTurqoise, width: 0.5),
+          // side: const BorderSide(color: colorOrange, width: 0.5),
           borderRadius: BorderRadius.circular(15),
         ),
         // color: Colors.transparent,
@@ -813,7 +853,7 @@ class TutorsListState extends State<TutorsList> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Text(newRating[0]),
+                    Text(rating.toString()),
                     const Icon(
                       Icons.star,
                       color: Color.fromARGB(255, 255, 233, 31),
@@ -827,7 +867,7 @@ class TutorsListState extends State<TutorsList> {
         Navigator.of(context).push(MaterialPageRoute(
             builder: (BuildContext context) => TutorProfilePageView(
                   tutor: tutors[i].tutor,
-                  tutee: widget.tutee,
+                  globals: widget.globals,
                 )));
       },
     );

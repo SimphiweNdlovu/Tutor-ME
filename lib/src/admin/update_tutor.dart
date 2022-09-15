@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import '../../services/services/tutor_services.dart';
 import '../components.dart';
 
 class UpdateTutor extends StatefulWidget {
@@ -21,6 +20,13 @@ class UpdateTutorState extends State<UpdateTutor> {
   bool isLoading = false;
   @override
   Widget build(BuildContext context) {
+    double widthOfScreen = MediaQuery.of(context).size.width;
+    double textBoxWidth = MediaQuery.of(context).size.width * 0.4 * 2;
+    double buttonWidth = MediaQuery.of(context).size.width * 0.8;
+    if (widthOfScreen >= 600.0) {
+      buttonWidth = buttonWidth / 2;
+      textBoxWidth = textBoxWidth / 2;
+    }
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -35,7 +41,7 @@ class UpdateTutorState extends State<UpdateTutor> {
             child: Container(
               decoration: const BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/Pictures/register_login.jpg"),
+                      image: AssetImage("assets/Pictures/Admin_Background.jpg"),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
                         Colors.black54,
@@ -44,6 +50,10 @@ class UpdateTutorState extends State<UpdateTutor> {
             ),
           ),
           Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+            ),
             backgroundColor: Colors.transparent,
             body: Column(children: [
               const Flexible(
@@ -77,19 +87,25 @@ class UpdateTutorState extends State<UpdateTutor> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  TextInputField(
-                    icon: Icons.email_outlined,
-                    hint: 'Enter the old Email',
-                    inputType: TextInputType.emailAddress,
-                    inputAction: TextInputAction.next,
-                    inputController: oldemailcontroller,
+                  SizedBox(
+                    width: textBoxWidth,
+                    child: TextInputField(
+                      icon: Icons.email_outlined,
+                      hint: 'Enter the old Email',
+                      inputType: TextInputType.emailAddress,
+                      inputAction: TextInputAction.next,
+                      inputController: oldemailcontroller,
+                    ),
                   ),
-                  TextInputField(
-                    icon: Icons.email_outlined,
-                    hint: 'Enter the new Email',
-                    inputType: TextInputType.emailAddress,
-                    inputAction: TextInputAction.next,
-                    inputController: newemailcontroller,
+                  SizedBox(
+                    width: textBoxWidth,
+                    child: TextInputField(
+                      icon: Icons.email_outlined,
+                      hint: 'Enter the new Email',
+                      inputType: TextInputType.emailAddress,
+                      inputAction: TextInputAction.next,
+                      inputController: newemailcontroller,
+                    ),
                   ),
                 ],
               ),
@@ -98,10 +114,11 @@ class UpdateTutorState extends State<UpdateTutor> {
               ),
               Container(
                 height: MediaQuery.of(context).size.height * 0.06,
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: buttonWidth,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: colorOrange,
+                  color: colorBlack,
+                  border: Border.all(color: colorWhite),
                 ),
                 child: TextButton(
                   onPressed: () async {
@@ -128,7 +145,7 @@ class UpdateTutorState extends State<UpdateTutor> {
                             content: Text(errMsg),
                             backgroundColor: colorWhite,
                             titleTextStyle: TextStyle(
-                              color: colorOrange,
+                              color: colorBlack,
                               fontSize:
                                   MediaQuery.of(context).size.height * 0.03,
                               fontWeight: FontWeight.bold,
@@ -148,8 +165,11 @@ class UpdateTutorState extends State<UpdateTutor> {
                         },
                       );
                     }
-                    TutorServices.updateTutorByEmail(
-                        oldemailcontroller.text, newemailcontroller.text);
+
+                    //TODO fix this
+
+                    // UserServices.updateTutorByEmail(
+                    //     oldemailcontroller.text, newemailcontroller.text);
                   },
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)

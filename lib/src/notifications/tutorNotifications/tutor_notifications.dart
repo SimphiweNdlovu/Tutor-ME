@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/services/models/tutors.dart';
 import 'package:tutor_me/src/notifications/tutorNotifications/tutors_requests.dart';
 import 'package:tutor_me/src/notifications/tutorNotifications/tutors_activity.dart';
 
 class TutorNotifications extends StatefulWidget {
-  final Tutors user;
-  const TutorNotifications({Key? key, required this.user}) : super(key: key);
+  final Globals globals;
+  const TutorNotifications({Key? key, required this.globals}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -31,7 +32,7 @@ class TutorNotificationsState extends State<TutorNotifications> {
                 tabs: [
                   Tab(
                       icon: Icon(
-                        Icons.chat_bubble_rounded,
+                        Icons.mail,
                         color: Colors.white,
                       ),
                       text: 'Requests'),
@@ -54,8 +55,8 @@ class TutorNotificationsState extends State<TutorNotifications> {
           ),
           body: TabBarView(
             children: <Widget>[
-              TutorRequests(user: widget.user),
-              TutorActivity(user: widget.user)
+              TutorRequests(globals: widget.globals),
+              TutorActivity(globals: widget.globals)
             ],
           )),
     );

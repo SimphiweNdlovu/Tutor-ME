@@ -2,30 +2,31 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:tutor_me/services/services/tutor_services.dart';
+import 'package:tutor_me/services/services/user_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import 'package:tutor_me/src/components.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_file/open_file.dart';
 
-import '../../services/models/tutors.dart';
+import '../../services/models/globals.dart';
+import '../../services/models/users.dart';
 
 class ToReturn {
   Uint8List image;
-  Tutors user;
+  Users user;
 
   ToReturn(this.image, this.user);
 }
 
 // ignore: must_be_immutable
 class TutorProfileEdit extends StatefulWidget {
-  final Tutors user;
+  final Globals globals;
   Uint8List image;
   final bool imageExists;
 
   TutorProfileEdit(
       {Key? key,
-      required this.user,
+      required this.globals,
       required this.image,
       required this.imageExists})
       : super(key: key);
@@ -77,7 +78,7 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
   Widget buildBody() {
     final screenWidthSize = MediaQuery.of(context).size.width;
     final screenHeightSize = MediaQuery.of(context).size.height;
-    String nameToEdit = widget.user.getName + ' ' + widget.user.getLastName;
+    String nameToEdit = widget.globals.getUser.getName + ' ' + widget.globals.getUser.getLastName;
     // FilePickerResult? filePickerResult;
     // String? fileName;
     // PlatformFile? file;
@@ -95,7 +96,7 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
               hintText: "Change to: ",
               labelText: nameToEdit,
               labelStyle: TextStyle(
-                color: colorTurqoise,
+                color: colorOrange,
                 fontSize: screenWidthSize * 0.05,
               ),
             ),
@@ -110,9 +111,9 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
             controller: bioController,
             decoration: InputDecoration(
               hintText: "Change To:",
-              labelText: widget.user.getBio,
+              labelText: widget.globals.getUser.getBio,
               labelStyle: TextStyle(
-                color: colorTurqoise,
+                color: colorOrange,
                 overflow: TextOverflow.visible,
                 fontSize: screenWidthSize * 0.05,
               ),
@@ -151,36 +152,35 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
                 isSaveLoading = true;
               });
               if (image != null) {
-                await TutorServices.uploadProfileImage(
-                    image, widget.user.getId);
+                try {
+                  await UserServices.updateProfileImage(
+                      image, widget.globals.getUser.getId, widget.globals);
+                } catch (e) {
+                  try {
+                    await UserServices.uploadProfileImage(
 
-                final newImage =
-                    await TutorServices.getTutorProfileImage(widget.user.getId);
+                        image, widget.globals.getUser.getId, widget.globals);
+                  }
+                  catch(e){
 
-                setState(() {
-                  widget.image = newImage;
-                });
-              }
-              if (nameController.text.isNotEmpty) {
-                List<String> name = nameController.text.split(' ');
-                String firstName = name[0];
-                String lastName = name[1];
-
-                widget.user.setFirstName = firstName;
-                widget.user.setLastName = lastName;
+                    const snack =
+                        SnackBar(content: Text("Error uploading image"));
+                    ScaffoldMessenger.of(context).showSnackBar(snack);
+                  }
+                }
               }
               if (bioController.text.isNotEmpty) {
-                widget.user.setBio = bioController.text;
+                widget.globals.getUser.setBio = bioController.text;
               }
               if (nameController.text.isNotEmpty ||
                   bioController.text.isNotEmpty) {
-                await TutorServices.updateTutor(widget.user);
+                // await UserServices.updateTutor(widget.user);
               }
               setState(() {
                 isSaveLoading = false;
               });
 
-              Navigator.pop(context, ToReturn(widget.image, widget.user));
+              Navigator.pop(context, ToReturn(widget.image, widget.globals.getUser));
             })
       ],
     );
@@ -243,7 +243,7 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
 
   Widget buildEditImageIcon() => ElevatedButton(
         style: ElevatedButton.styleFrom(
-            primary: colorOrange,
+            backgroundColor: colorBlueTeal,
             shape: const CircleBorder(),
             padding: const EdgeInsets.all(8)),
         child: const Icon(
@@ -301,7 +301,7 @@ class TextInputFieldEdit extends StatelessWidget {
           color: colorWhite,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: colorOrange,
+            color: colorBlueTeal,
             width: 1,
           ),
         ),
@@ -314,7 +314,7 @@ class TextInputFieldEdit extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 24,
-                    color: colorTurqoise,
+                    color: colorOrange,
                   ),
                 ),
                 hintText: hint,
@@ -322,7 +322,7 @@ class TextInputFieldEdit extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.normal,
-                color: colorTurqoise),
+                color: colorOrange),
             keyboardType: inputType,
             textInputAction: inputAction,
           ),

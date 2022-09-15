@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:tutor_me/src/tutorProfilePages/tutor_profile_view.dart';
-import '../../services/models/tutors.dart';
+import '../../services/models/globals.dart';
+import '../../services/models/users.dart';
 import '../chat/message.dart';
 import 'package:intl/intl.dart';
 
@@ -17,14 +18,14 @@ import '../tuteeProfilePages/tutee_profile_view.dart';
 // import 'theme/themes.dart';
 
 class Chat extends StatefulWidget {
-  final dynamic reciever;
-  final dynamic user;
+  final Users reciever;
+  final Globals globals;
   final Uint8List image;
   final bool hasImage;
   const Chat(
       {Key? key,
       required this.reciever,
-      required this.user,
+      required this.globals,
       required this.image,
       required this.hasImage})
       : super(key: key);
@@ -49,28 +50,24 @@ class ChatState extends State<Chat> {
   @override
   Widget build(BuildContext context) {
     String status = "";
-    if (widget.reciever.getStatus == "F") {
-      status = "Offline";
-    } else {
-      status = "Online";
-    }
-    String name = widget.reciever.getName + ' ' + widget.reciever.getLastName;
+   
+    String name = widget.globals.getUser.getName + ' ' + widget.globals.getUser.getLastName;
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: colorOrange,
+          backgroundColor: colorBlueTeal,
           title: InkWell(
-            onTap: widget.reciever is Tutors
+            onTap: widget.globals.getUser.getStatus 
                 ? () {
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) => TutorProfilePageView(
                               tutor: widget.reciever,
-                              tutee: widget.user,
+                              globals: widget.globals,
                             )));
                   }
                 : () {
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (BuildContext context) => TuteeProfilePageView(
-                              user: widget.reciever,
+                              global: widget.globals,
                               image: widget.image,
                               imageExists: widget.hasImage,
                             )));
@@ -146,7 +143,7 @@ class ChatState extends State<Chat> {
                       : Alignment.topLeft,
                   child: Card(
                     color: message.isSentByMe
-                        ? colorOrange.withOpacity(0.8)
+                        ? colorBlueTeal.withOpacity(0.8)
                         : Colors.grey[300],
                     elevation: 8,
                     child: Padding(
@@ -201,13 +198,13 @@ class ChatState extends State<Chat> {
                           )
                         : Icon(
                             Icons.mail,
-                            color: colorTurqoise,
+                            color: colorOrange,
                             size: MediaQuery.of(context).size.height * 0.045,
                           ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         Icons.send,
-                        color: colorTurqoise,
+                        color: colorOrange,
                         size: MediaQuery.of(context).size.height * 0.045,
                       ),
                       onPressed: () {},

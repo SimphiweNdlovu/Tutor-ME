@@ -5,8 +5,6 @@ import 'package:tutor_me/src/authenticate/login.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import '../components.dart';
 import 'register_step2.dart';
-import '../../services/services/tutee_services.dart';
-import '../../services/services/tutor_services.dart';
 import 'package:email_auth/email_auth.dart';
 
 class RegisterStep1 extends StatefulWidget {
@@ -19,7 +17,7 @@ class RegisterStep1 extends StatefulWidget {
 class _RegisterStep1State extends State<RegisterStep1> {
   String inputOTP = "";
   String errMsg = "";
-  EmailAuth emailAuth = EmailAuth(sessionName: "Tutor Me");
+  EmailAuth emailAuth = EmailAuth(sessionName: "TutorWhizz");
   void sendOTP() async {
     var res = await emailAuth.sendOtp(
         recipientMail: emailController.text, otpLength: 5);
@@ -115,7 +113,7 @@ class _RegisterStep1State extends State<RegisterStep1> {
     double textBoxWidth = MediaQuery.of(context).size.width * 0.4 * 2;
     double buttonWidth = MediaQuery.of(context).size.width * 0.8;
     String welcome = "";
-    if (widthOfScreen < 400.0) {
+    if (widthOfScreen < 600.0) {
       welcome = "Hi, Welcome!";
     } else {
       stepperWidth = stepperWidth / 2;
@@ -159,7 +157,7 @@ class _RegisterStep1State extends State<RegisterStep1> {
                   welcome,
                   style: TextStyle(
                     color: colorWhite,
-                    fontSize: MediaQuery.of(context).size.width * 0.12,
+                    fontSize: MediaQuery.of(context).size.height * 0.05,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -178,8 +176,12 @@ class _RegisterStep1State extends State<RegisterStep1> {
                       primarySwatch: Colors.green,
                       canvasColor: Colors.transparent,
                       colorScheme: ColorScheme.fromSwatch().copyWith(
-                          secondary: colorOrange, primary: colorOrange)),
+                          secondary: colorBlueTeal, primary: colorOrange)),
                   child: Stepper(
+                    onStepCancel: null,
+                    onStepContinue: null,
+                    controlsBuilder: (context, details) =>
+                        const SizedBox.shrink(),
                     type: StepperType.horizontal,
                     steps: getSteps(),
                     currentStep: currentStep,
@@ -256,7 +258,7 @@ class _RegisterStep1State extends State<RegisterStep1> {
                 height: MediaQuery.of(context).size.height * 0.03,
               ),
               Container(
-                height: MediaQuery.of(context).size.height * 0.06,
+                height: MediaQuery.of(context).size.height * 0.07,
                 width: buttonWidth,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -291,24 +293,29 @@ class _RegisterStep1State extends State<RegisterStep1> {
                     }
 
                     if (toRegister == "Tutor") {
-                      bool isThereTutorWithEmail =
-                          await TutorServices.isThereTutorByEmail(
-                              emailController.text);
+                      // bool isThereTutorWithEmail =
+                      //     await UserServices.isThereTutorByEmail(
+                      //         emailController.text, );
+
+                      bool isThereTutorWithEmail = true;
 
                       if (isThereTutorWithEmail) {
                         errMsg +=
                             "ERROR: A Tutor is registered with this email\n";
                       }
                     } else {
-                      bool isThereTuteeWithEmail =
-                          await TuteeServices.isThereTuteeByEmail(
-                              emailController.text);
+                      // bool isThereTuteeWithEmail =
+                      //     await UserServices.isThereTuteeByEmail(
+                      //         emailController.text);
+
+                      bool isThereTuteeWithEmail = true;
 
                       if (isThereTuteeWithEmail) {
                         errMsg +=
                             "ERROR: A Tutee is registered with this email\n";
                       }
                     }
+
                     sendOTP();
 
                     if (errMsg != "") {
@@ -349,6 +356,16 @@ class _RegisterStep1State extends State<RegisterStep1> {
                       );
                     } else {
                       _displayTextInputDialog(context);
+                      // Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //       builder: (context) => RegisterStep2(
+                      //         email: emailController.text,
+                      //         password: passwordController.text,
+                      //         confirmPassword: confirmPasswordController.text,
+                      //         toRegister: toRegister,
+                      //       ),
+                      //     ));
                     }
                   },
                   child: isLoading

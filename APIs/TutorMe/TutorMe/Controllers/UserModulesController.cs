@@ -3,6 +3,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TutorMe.Data;
 using TutorMe.Services;
+using TutorMe.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TutorMe.Controllers {
     [Route("api/[controller]")]
@@ -17,28 +19,58 @@ namespace TutorMe.Controllers {
             this.mapper = mapper;
         }
 
+        [Authorize]
         [HttpGet]
         public IActionResult GetAllUserModules() {
-            var userModules = userModuleService.GetAllUserModules();
-            return Ok(userModules);
+            Console.WriteLine("this is what we got");
+            try {
+                var userModules = userModuleService.GetAllUserModules();
+                return Ok(userModules);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("{id}")]
-        public IActionResult GetUserModuleById(Guid id) {
-            var userModule = userModuleService.GetUserModuleById(id);
-            return Ok(userModule);
+        public IActionResult GetUserModulesByUserId(Guid id) {
+            try {
+                var userModule = userModuleService.GetUserModulesByUserId(id);
+                if (userModule == null) {
+                    return NotFound();
+                }
+                return Ok(userModule);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpPost]
-        public IActionResult createUserModule(UserModule userModule) {
-            var userModuleId = userModuleService.createUserModule(userModule);
-            return Ok(userModuleId);
+        public IActionResult createUserModule(IUserModule userModule) {
+            try {
+                var userModuleId = userModuleService.createUserModule(userModule);
+                return Ok(userModuleId);
+            }
+            catch(Exception exception) {
+                return BadRequest(exception.Message);
+            }
+            
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteUserModule(Guid id) {
-            var userModule = userModuleService.deleteUserModuleById(id);
-            return Ok(userModule);
+            try {
+                var userModule = userModuleService.deleteUserModuleById(id);
+                return Ok(userModule);
+            }
+            catch(Exception exception) {
+                return BadRequest(exception.Message);
+            }
+            
         }
     }
 }

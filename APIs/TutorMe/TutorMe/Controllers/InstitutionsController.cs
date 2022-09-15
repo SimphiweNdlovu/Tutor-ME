@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TutorMe.Data;
 using TutorMe.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TutorMe.Controllers
 {
@@ -34,6 +35,7 @@ namespace TutorMe.Controllers
             return Ok(institution);
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult createInstitution(Institution institution)
         {
@@ -41,6 +43,7 @@ namespace TutorMe.Controllers
             return Ok(institutionId);
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteInstitution(Guid id)
         {

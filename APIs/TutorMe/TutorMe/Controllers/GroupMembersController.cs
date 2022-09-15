@@ -3,6 +3,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TutorMe.Data;
 using TutorMe.Services;
+using TutorMe.Entities;
 
 namespace TutorMe.Controllers
 {
@@ -35,7 +36,7 @@ namespace TutorMe.Controllers
         }
 
         [HttpPost]
-        public IActionResult createGroupMember(GroupMember groupMember)
+        public IActionResult createGroupMember(IGroupMember groupMember)
         {
             var groupMemberId = groupMemberService.createGroupMember(groupMember);
             return Ok(groupMemberId);
@@ -46,6 +47,28 @@ namespace TutorMe.Controllers
         {
             var groupMember = groupMemberService.deleteGroupMemberById(id);
             return Ok(groupMember);
+        }
+
+        [HttpGet("tutee/{id}")]
+        public IActionResult GetGroupTutees(Guid id) {
+            try {
+                var groupMembers = groupMemberService.GetGroupTutees(id);
+                return Ok(groupMembers);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
+        }
+
+        [HttpGet("group/{id}")]
+        public IActionResult getUserGroups(Guid id) {
+            try {
+                var groups = groupMemberService.GetUserGroups(id);
+                return Ok(groups);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
     }
 }

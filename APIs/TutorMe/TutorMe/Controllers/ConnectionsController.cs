@@ -3,6 +3,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TutorMe.Data;
 using TutorMe.Services;
+using TutorMe.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TutorMe.Controllers
 {
@@ -19,33 +21,60 @@ namespace TutorMe.Controllers
             this.connectionService = connectionService;
             this.mapper = mapper;
         }
-
+        
+        [Authorize]
         [HttpGet]
         public IActionResult GetAllConnections()
         {
-            var connections = connectionService.GetAllConnections();
-            return Ok(connections);
+            try {
+                var connections = connectionService.GetAllConnections();
+                return Ok(connections);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetConnectionById(Guid id)
         {
-            var connection = connectionService.GetConnectionById(id);
-            return Ok(connection);
+            try {
+                var connection = connectionService.GetConnectionsByUserId(id);
+                if (connection == null) {
+                    return NotFound();
+                }
+                return Ok(connection);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
-
-        [HttpPost]
-        public IActionResult createConnection(Connection connection)
-        {
-            var connectionId = connectionService.createConnection(connection);
-            return Ok(connectionId);
-        }
-
+        
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteConnection(Guid id)
         {
-            var connection = connectionService.deleteConnectionById(id);
-            return Ok(connection);
+            try {
+                var connection = connectionService.deleteConnectionById(id);
+                return Ok(connection);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
+        
+        [Authorize]
+        [HttpGet("users/{id}")]
+        public IActionResult GetUserConnectionObjectsById(Guid id, Guid userType) { 
+            try {
+                var connections = connectionService.GetUserConnectionObjectById(id, userType);
+                return Ok(connections);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
+        }
+
     }
 }

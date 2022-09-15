@@ -1,12 +1,14 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 
 import 'package:flutter/material.dart';
+import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import '../../services/services/tutor_services.dart';
+import '../../services/services/user_services.dart';
 import '../components.dart';
 
 class DeleteTutor extends StatefulWidget {
-  const DeleteTutor({Key? key}) : super(key: key);
+  final Globals globals;
+  const DeleteTutor({Key? key, required this.globals}) : super(key: key);
 
   @override
   DeleteTutorState createState() => DeleteTutorState();
@@ -20,6 +22,13 @@ class DeleteTutorState extends State<DeleteTutor> {
   bool isLoading = false;
   @override
   Widget build(BuildContext context) {
+    double widthOfScreen = MediaQuery.of(context).size.width;
+    double textBoxWidth = MediaQuery.of(context).size.width * 0.4 * 2;
+    double buttonWidth = MediaQuery.of(context).size.width * 0.8;
+    if (widthOfScreen >= 600.0) {
+      buttonWidth = buttonWidth / 2;
+      textBoxWidth = textBoxWidth / 2;
+    }
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -34,7 +43,7 @@ class DeleteTutorState extends State<DeleteTutor> {
             child: Container(
               decoration: const BoxDecoration(
                   image: DecorationImage(
-                      image: AssetImage("assets/Pictures/register_login.jpg"),
+                      image: AssetImage("assets/Pictures/Admin_Background.jpg"),
                       fit: BoxFit.cover,
                       colorFilter: ColorFilter.mode(
                         Colors.black54,
@@ -43,6 +52,10 @@ class DeleteTutorState extends State<DeleteTutor> {
             ),
           ),
           Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+            ),
             backgroundColor: Colors.transparent,
             body: Column(children: [
               const Flexible(
@@ -76,12 +89,15 @@ class DeleteTutorState extends State<DeleteTutor> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  TextInputField(
-                    icon: Icons.perm_identity,
-                    hint: 'id',
-                    inputType: TextInputType.text,
-                    inputAction: TextInputAction.done,
-                    inputController: idcontroller,
+                  SizedBox(
+                    width: textBoxWidth,
+                    child: TextInputField(
+                      icon: Icons.perm_identity,
+                      hint: 'id',
+                      inputType: TextInputType.text,
+                      inputAction: TextInputAction.done,
+                      inputController: idcontroller,
+                    ),
                   ),
                 ],
               ),
@@ -90,10 +106,11 @@ class DeleteTutorState extends State<DeleteTutor> {
               ),
               Container(
                 height: MediaQuery.of(context).size.height * 0.06,
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: buttonWidth,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: colorOrange,
+                  color: colorBlack,
+                  border: Border.all(color: colorWhite),
                 ),
                 child: TextButton(
                   onPressed: () async {
@@ -114,7 +131,7 @@ class DeleteTutorState extends State<DeleteTutor> {
                             content: Text(errMsg),
                             backgroundColor: colorWhite,
                             titleTextStyle: TextStyle(
-                              color: colorOrange,
+                              color: colorBlack,
                               fontSize:
                                   MediaQuery.of(context).size.height * 0.03,
                               fontWeight: FontWeight.bold,
@@ -134,7 +151,7 @@ class DeleteTutorState extends State<DeleteTutor> {
                         },
                       );
                     }
-                    TutorServices.deleteTutor(idcontroller.text);
+                    UserServices.deleteUser(idcontroller.text, widget.globals);
                   },
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)

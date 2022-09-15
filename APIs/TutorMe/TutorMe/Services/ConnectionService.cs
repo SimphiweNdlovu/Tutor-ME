@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TutorMe.Data;
+using TutorMe.Entities;
 using TutorMe.Models;
 
 namespace TutorMe.Services
@@ -7,8 +8,10 @@ namespace TutorMe.Services
     public interface IConnectionService
     {
         IEnumerable<Connection> GetAllConnections();
+        IEnumerable<Connection> GetConnectionsByUserId(Guid id);
+        IEnumerable<User> GetUserConnectionObjectById(Guid id, Guid userType);
         Connection GetConnectionById(Guid id);
-        Guid createConnection(Connection connection);
+        Guid createConnection(IConnection connection);
         bool deleteConnectionById(Guid id);
     }
     public class ConnectionServices : IConnectionService
@@ -22,27 +25,31 @@ namespace TutorMe.Services
 
         public IEnumerable<Connection> GetAllConnections()
         {
-            return _context.Connection;
+            return _context.Connection.ToList();
         }
 
         public Connection GetConnectionById(Guid id)
         {
             var connection = _context.Connection.Find(id);
-            if (connection == null)
-            {
-                throw new KeyNotFoundException("Connection not found");
-            }
             return connection;
         }
-        public Guid createConnection(Connection connection)
+
+        public IEnumerable<Connection> GetConnectionsByUserId(Guid id) {
+            var connections = _context.Connection.Where(e => e.TuteeId == id || e.TutorId == id);
+            return connections.ToList();
+        }
+        public Guid createConnection(IConnection connection)
         {
             if (_context.Connection.Where(e => e.ModuleId == connection.ModuleId && e.TuteeId == connection.TuteeId && e.TutorId == connection.TutorId).Any())
             {
                 throw new KeyNotFoundException("This Connection already exists, Please log in");
             }
-            //Connection.Password = BCrypt.Net.BCrypt.HashPassword(Connection.Password, "ThisWillBeAGoodPlatformForBothConnectionsAndTuteesToConnectOnADailyBa5e5");
-            connection.ConnectionId = Guid.NewGuid();
-            _context.Connection.Add(connection);
+            var newConnection = new Connection();
+            newConnection.ConnectionId = Guid.NewGuid();
+            newConnection.ModuleId = connection.ModuleId;
+            newConnection.TuteeId = connection.TuteeId;
+            newConnection.TutorId = connection.TutorId;
+            _context.Connection.Add(newConnection);
             _context.SaveChanges();
             return connection.ConnectionId;
         }
@@ -58,5 +65,41 @@ namespace TutorMe.Services
             _context.SaveChanges();
             return true;
         }
+
+        public IEnumerable<User> GetUserConnectionObjectById(Guid id, Guid userType) {
+            var userTypeObject = _context.UserType.FirstOrDefault(e => e.UserTypeId == userType);
+            if (userTypeObject == null) {
+                throw new KeyNotFoundException("User Type not found");
+            }
+            
+            if (userTypeObject.Type == "Tutor") {
+                var connections = _context.Connection.Include(e=>e.Tutee).Where(e => e.TutorId == id).ToArray();
+                var users = connections.Select(e => e.Tutee);
+                //get unique users
+                var uniqueUser = new List<User>();
+                foreach(User item in users) {
+                    if (!uniqueUser.Contains(item)) {
+                        uniqueUser.Add(item);
+                    }
+                }
+                return uniqueUser;
+            }
+            else if (userTypeObject.Type == "Tutee") {
+                var connections = _context.Connection.Include(e => e.Tutor).Where(e => e.TuteeId == id);
+                var users = connections.Select(e => e.Tutor);
+                var uniqueUser = new List<User>();
+                foreach (User item in users) {
+                    if (!uniqueUser.Contains(item)) {
+                        uniqueUser.Add(item);
+                    }
+                }
+                return uniqueUser;
+            }
+            else {
+                throw new KeyNotFoundException("User Type not found");
+
+            }
+        }
+
     }
 }

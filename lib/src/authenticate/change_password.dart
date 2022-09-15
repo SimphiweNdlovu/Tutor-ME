@@ -1,11 +1,9 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 
 import 'package:flutter/material.dart';
+import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import '../../services/models/tutees.dart';
-import '../../services/models/tutors.dart';
-import '../../services/services/tutee_services.dart';
-import '../../services/services/tutor_services.dart';
+import '../../services/services/user_services.dart';
 import '../components.dart';
 import '../tutee_page.dart';
 import '../tutor_page.dart';
@@ -27,8 +25,7 @@ class ChangePasswordState extends State<ChangePassword> {
   final TextEditingController newpasswordController = TextEditingController();
   final TextEditingController newconfirmpasswordController =
       TextEditingController();
-  late Tutors tutor;
-  late Tutees tutee;
+  late Globals globals;
 
   bool isLoading = false;
   @override
@@ -115,7 +112,7 @@ class ChangePasswordState extends State<ChangePassword> {
                 width: MediaQuery.of(context).size.width * 0.8,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: colorOrange,
+                  color: colorBlueTeal,
                 ),
                 child: TextButton(
                   onPressed: () async {
@@ -149,7 +146,7 @@ class ChangePasswordState extends State<ChangePassword> {
                             content: Text(errMsg),
                             backgroundColor: colorWhite,
                             titleTextStyle: TextStyle(
-                              color: colorOrange,
+                              color: colorBlueTeal,
                               fontSize:
                                   MediaQuery.of(context).size.height * 0.03,
                               fontWeight: FontWeight.bold,
@@ -172,14 +169,14 @@ class ChangePasswordState extends State<ChangePassword> {
                       if (widget.toRegister == "Tutor") {
                         try {
                           // TutorServices tutor = TutorServices.Login(
-                          tutor =
-                              await TutorServices.getTutorByEmail(widget.email);
-                          tutor.setPassword = TutorServices.hashPassword(newpasswordController.text);
-                          await TutorServices.updateTutor(tutor);
+                          globals =
+                              await UserServices.getTutorByEmail(widget.email, globals);
+                          await UserServices.changePassword(newpasswordController.text, globals);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => TutorPage(user: tutor)),
+                                builder: (context) =>
+                                    TutorPage(globals: globals)),
                           );
                         } catch (e) {
                           setState(() {
@@ -194,7 +191,7 @@ class ChangePasswordState extends State<ChangePassword> {
                                     const Text("Invalid Password or Email"),
                                 backgroundColor: colorWhite,
                                 titleTextStyle: TextStyle(
-                                  color: colorOrange,
+                                  color: colorBlueTeal,
                                   fontSize:
                                       MediaQuery.of(context).size.height * 0.03,
                                   fontWeight: FontWeight.bold,
@@ -217,14 +214,14 @@ class ChangePasswordState extends State<ChangePassword> {
                       } else {
                         try {
                           // TutorServices tutor = TutorServices.Login(
-                          tutee =
-                              await TuteeServices.getTuteeByEmail(widget.email);
-                          tutee.setPassword = TuteeServices.hashPassword(newpasswordController.text);
-                          await TuteeServices.updateTutee(tutee);
+                          globals =
+                              await UserServices.getTuteeByEmail(widget.email, globals);
+                          await UserServices.changePassword(newpasswordController.text, globals);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => TuteePage(user: tutee)),
+                                builder: (context) =>
+                                    TuteePage(globals: globals)),
                           );
                         } catch (e) {
                           setState(() {
@@ -239,7 +236,7 @@ class ChangePasswordState extends State<ChangePassword> {
                                     const Text("Invalid Password or Email"),
                                 backgroundColor: colorWhite,
                                 titleTextStyle: TextStyle(
-                                  color: colorOrange,
+                                  color: colorBlueTeal,
                                   fontSize:
                                       MediaQuery.of(context).size.height * 0.03,
                                   fontWeight: FontWeight.bold,

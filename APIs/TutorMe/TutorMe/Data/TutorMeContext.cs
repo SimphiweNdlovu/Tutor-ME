@@ -28,6 +28,7 @@ namespace TutorMe.Data
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserType> UserType { get; set; }
         public virtual DbSet<UserModule> UserModule { get; set; }
+        public virtual DbSet<UserRefreshToken> UserRefreshToken { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,8 +39,6 @@ namespace TutorMe.Data
                 entity.HasIndex(e => e.ModuleId, "IX_Connections_ModuleId");
 
                 entity.HasIndex(e => e.TuteeId, "IX_Connections_TuteeId");
-
-                entity.HasIndex(e => e.TuteeUserId, "IX_Connections_TuteeUserId");
 
                 entity.HasIndex(e => e.TutorId, "IX_Connections_TutorId");
 
@@ -75,6 +74,12 @@ namespace TutorMe.Data
                     .HasForeignKey(d => d.ModuleId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("Group_Module_FK");
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.Group)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("Group_User_FK");
             });
 
             modelBuilder.Entity<GroupMember>(entity =>
@@ -129,8 +134,6 @@ namespace TutorMe.Data
             modelBuilder.Entity<Institution>(entity =>
             {
                 entity.Property(e => e.InstitutionId).HasDefaultValueSql("(newid())").HasMaxLength(36);;
-
-                entity.Property(e => e.Faculty).IsRequired();
 
                 entity.Property(e => e.Location).IsRequired();
 
@@ -211,7 +214,9 @@ namespace TutorMe.Data
 
                 entity.Property(e => e.Password).IsRequired();
 
-                entity.Property(e => e.Rating).HasColumnName("rating");
+                entity.Property(e => e.Rating).HasColumnName("rating").HasDefaultValue(0);
+                
+                entity.Property(e => e.NumberOfReviews).HasDefaultValue(0);
 
                 entity.Property(e => e.UserTypeId).HasDefaultValueSql("(newid())").HasMaxLength(36);;
 

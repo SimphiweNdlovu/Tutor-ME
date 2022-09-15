@@ -30,7 +30,7 @@ class LandingPageState extends State<LandingPage> {
     return Container(
       color: colorWhite,
       child: Scaffold(
-        backgroundColor: colorTurqoise.withOpacity(0.2),
+        backgroundColor: colorOrange.withOpacity(0.2),
         body: Container(
           padding: EdgeInsets.only(bottom: screenSize.height * 0.08),
           child: PageView(
@@ -48,34 +48,30 @@ class LandingPageState extends State<LandingPage> {
             controller: pageController,
             children: [
               buildPage(
-                description:
-                    "Learn and connect with peers",
+                description: "Learn and connect with peers",
                 urlImage:
                     'assets/Pictures/undraw_visionary_technology_re_jfp7.svg',
-                color: colorOrange,
+                color: colorBlueTeal,
                 index: 0,
               ),
               buildPage(
                 description:
                     "Connect to tutors or tutees. Join groups and request for tutors",
-                urlImage:
-                    'assets/Pictures/undraw_online_connection_6778.svg',
-                color: colorTurqoise,
+                urlImage: 'assets/Pictures/undraw_online_connection_6778.svg',
+                color: colorOrange,
                 index: 0,
               ),
               buildPage(
                 description:
                     "Set up a profile and get ready to interact with your peers and tutors.",
-                urlImage:
-                    'assets/Pictures/undraw_account_re_o7id.svg',
+                urlImage: 'assets/Pictures/undraw_account_re_o7id.svg',
                 color: colorOrange,
                 index: 0,
               ),
               buildPage(
                 description: "Let's begin our learning journey",
-                urlImage:
-                    'assets/Pictures/undraw_maker_launch_re_rq81.svg',
-                color: colorTurqoise,
+                urlImage: 'assets/Pictures/undraw_maker_launch_re_rq81.svg',
+                color: colorOrange,
                 index: 0,
               ),
             ],
@@ -91,7 +87,7 @@ class LandingPageState extends State<LandingPage> {
                   ),
                 ),
                 style: TextButton.styleFrom(
-                    primary: colorWhite,
+                    foregroundColor: colorWhite,
                     backgroundColor: colorOrange,
                     minimumSize: Size.fromHeight(screenSize.height * 0.08)),
                 onPressed: () {
@@ -100,7 +96,7 @@ class LandingPageState extends State<LandingPage> {
                 })
             : SizedBox(
                 // padding: EdgeInsets.symmetric(horizontal: screenSize.height * 0.9),
-                
+
                 height: screenSize.height * 0.08,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -112,7 +108,7 @@ class LandingPageState extends State<LandingPage> {
                       count: 4,
                       effect: const ScrollingDotsEffect(
                         radius: 14,
-                        activeDotColor: colorOrange,
+                        activeDotColor: colorBlueTeal,
                         spacing: 15,
                       ),
                     )),
@@ -131,7 +127,7 @@ class LandingPageState extends State<LandingPage> {
                           },
                           icon: const Icon(Icons.arrow_circle_right),
                           iconSize: screenSize.height * 0.05,
-                          color: colorOrange,
+                          color: colorBlueTeal,
                         )
                       ],
                     ),
@@ -147,12 +143,13 @@ class LandingPageState extends State<LandingPage> {
       required String description,
       required Color color,
       required int index}) {
+    double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return Stack(children: [
       ClipPath(
         clipper: OrangeClipper(),
         child: Container(
-          color: colorOrange,
+          color: colorBlueTeal,
           height: screenHeight * 0.45,
         ),
       ),
@@ -162,6 +159,7 @@ class LandingPageState extends State<LandingPage> {
           SizedBox(
             child: SvgPicture.asset(urlImage),
             height: screenHeight * 0.25,
+            width: screenWidth * 0.7,
           ),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.05,
@@ -171,7 +169,7 @@ class LandingPageState extends State<LandingPage> {
               description,
               style: const TextStyle(
                   fontSize: 18,
-                  color: colorTurqoise,
+                  color: colorOrange,
                   fontWeight: FontWeight.w600),
             ),
             padding: EdgeInsets.symmetric(
@@ -184,7 +182,7 @@ class LandingPageState extends State<LandingPage> {
         child: ClipPath(
           clipper: TurqoiseClipper(),
           child: Container(
-            color: colorTurqoise,
+            color: colorOrange,
             height: screenHeight * 0.5,
           ),
         ),

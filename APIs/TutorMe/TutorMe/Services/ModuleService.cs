@@ -22,7 +22,7 @@ namespace TutorMe.Services
 
         public IEnumerable<Module> GetAllModules()
         {
-            return _context.Module;
+            return _context.Module.ToList();
         }
 
         public Module GetModuleById(Guid id)
@@ -40,7 +40,6 @@ namespace TutorMe.Services
             {
                 throw new KeyNotFoundException("This Module already exists, Please log in");
             }
-            //Module.Password = BCrypt.Net.BCrypt.HashPassword(Module.Password, "ThisWillBeAGoodPlatformForBothModulesAndTuteesToConnectOnADailyBa5e5");
             module.ModuleId = Guid.NewGuid();
             _context.Module.Add(module);
             _context.SaveChanges();

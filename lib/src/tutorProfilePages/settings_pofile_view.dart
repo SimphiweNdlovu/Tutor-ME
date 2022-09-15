@@ -1,30 +1,33 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:tutor_me/services/models/globals.dart';
+import 'package:tutor_me/services/services/institution_services.dart';
+import 'package:tutor_me/services/services/module_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import 'package:tutor_me/src/tutorProfilePages/tutor_profile_edit.dart';
 import 'package:tutor_me/src/tutorProfilePages/user_stats.dart';
 
+import '../../services/models/intitutions.dart';
 import '../../services/models/modules.dart';
-import '../../services/models/tutors.dart';
-import '../../services/services/tutor_services.dart';
+import '../../services/models/users.dart';
 import '../components.dart';
 import '../tuteeProfilePages/edit_module_list.dart';
 
 class ToReturn {
   Uint8List image;
-  Tutors user;
+  Users user;
   ToReturn(this.image, this.user);
 }
 
 // ignore: must_be_immutable
 class TutorSettingsProfileView extends StatefulWidget {
-  Tutors user;
+  Globals globals;
   Uint8List image;
   bool imageExists;
   TutorSettingsProfileView(
       {Key? key,
-      required this.user,
+      required this.globals,
       required this.image,
       required this.imageExists})
       : super(key: key);
@@ -36,36 +39,57 @@ class TutorSettingsProfileView extends StatefulWidget {
 
 class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
   List<Modules> currentModules = List<Modules>.empty();
+  late Institutions institution;
   late int numConnections;
   late int numTutees;
   bool _isLoading = true;
 
   getCurrentModules() async {
-    final current = await TutorServices.getTutorModules(widget.user.getId);
+    numTutees = 2;
+    numConnections = 3;
+    try {
+      final currentModulesList = await ModuleServices.getUserModules(
+          widget.globals.getUser.getId, widget.globals);
+
+      setState(() {
+        currentModules = currentModulesList;
+      });
+    } catch (e) {
+      const snackBar = SnackBar(content: Text('Error loading'));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+
+    getInstitution();
+  }
+
+  getInstitution() async {
+    final tempInstitution = await InstitutionServices.getUserInstitution(
+        widget.globals.getUser.getInstitutionID, widget.globals);
     setState(() {
-      currentModules = current;
+      institution = tempInstitution;
       _isLoading = false;
     });
   }
+  //TODO: get numConnections and numTutees
 
-  int getNumConnections() {
-    var allConnections = widget.user.getConnections.split(',');
+  // int getNumConnections() {
+  //   var allConnections = widget.user.getConnections.split(',');
 
-    return allConnections.length;
-  }
+  //   return allConnections.length;
+  // }
 
-  int getNumTutees() {
-    var allTutees = widget.user.getTuteesCode.split(',');
+  // int getNumTutees() {
+  //   var allTutees = widget.user.getTuteesCode.split(',');
 
-    return allTutees.length;
-  }
+  //   return allTutees.length;
+  // }
 
   @override
   void initState() {
     super.initState();
     getCurrentModules();
-    numConnections = getNumConnections();
-    numTutees = getNumTutees();
+    // numConnections = getNumConnections();
+    // numTutees = getNumTutees();
   }
 
   @override
@@ -77,7 +101,8 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
               )
             : WillPopScope(
                 onWillPop: () async {
-                  Navigator.pop(context, ToReturn(widget.image, widget.user));
+                  Navigator.pop(
+                      context, ToReturn(widget.image, widget.globals.getUser));
                   return false;
                 },
                 child: ListView(
@@ -94,12 +119,13 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
   Widget buildBody() {
     final screenWidthSize = MediaQuery.of(context).size.width;
     final screenHeightSize = MediaQuery.of(context).size.height;
-    String userName = widget.user.getName + ' ' + widget.user.getLastName;
-    String courseInfo =
-        widget.user.getCourse + ' | ' + widget.user.getInstitution;
-    String personalDets = userName + '(' + widget.user.getAge + ')';
+    String userName = widget.globals.getUser.getName +
+        ' ' +
+        widget.globals.getUser.getLastName;
+    String courseInfo = institution.getName;
+    String personalDets = userName + '(' + widget.globals.getUser.getAge + ')';
     String gender = "";
-    if (widget.user.getGender == "F") {
+    if (widget.globals.getUser.getGender == "F") {
       gender = "Female";
     } else {
       gender = "Male";
@@ -108,7 +134,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
       Text(
         personalDets,
         style: TextStyle(
-          fontSize: screenWidthSize * 0.08,
+          fontSize: screenHeightSize * 0.04,
           fontWeight: FontWeight.bold,
           color: Colors.black,
         ),
@@ -116,20 +142,20 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
       SmallTagButton(
         btnName: "Tutor",
         onPressed: () {},
-        backColor: colorTurqoise,
+        backColor: colorOrange,
       ),
       SizedBox(height: screenHeightSize * 0.01),
       Text(
         courseInfo,
         style: TextStyle(
-          fontSize: screenWidthSize * 0.04,
+          fontSize: screenHeightSize * 0.04,
           fontWeight: FontWeight.normal,
-          color: colorOrange,
+          color: colorBlueTeal,
         ),
       ),
       SizedBox(height: screenHeightSize * 0.02),
       UserStats(
-        rating: widget.user.getRating,
+        rating: widget.globals.getUser.getRating,
         numTutees: numTutees,
         numConnections: numConnections,
       ),
@@ -145,7 +171,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
             "About Me",
             textAlign: TextAlign.left,
             style: TextStyle(
-              fontSize: screenWidthSize * 0.065,
+              fontSize: screenHeightSize * 0.04,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
@@ -160,9 +186,9 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
             top: screenHeightSize * 0.01,
             bottom: screenWidthSize * 0.06,
           ),
-          child: Text(widget.user.getBio,
+          child: Text(widget.globals.getUser.getBio,
               style: TextStyle(
-                fontSize: screenWidthSize * 0.05,
+                fontSize: screenHeightSize * 0.033,
                 fontWeight: FontWeight.normal,
                 color: Colors.black,
               )),
@@ -177,7 +203,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
           child: Text("Gender",
               textAlign: TextAlign.left,
               style: TextStyle(
-                fontSize: screenWidthSize * 0.06,
+                fontSize: screenHeightSize * 0.04,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               )),
@@ -194,7 +220,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
           ),
           child: Text(gender,
               style: TextStyle(
-                fontSize: screenWidthSize * 0.05,
+                fontSize: screenHeightSize * 0.033,
                 fontWeight: FontWeight.normal,
                 color: Colors.black,
               )),
@@ -210,7 +236,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
           child: Text("Modules I tutor",
               textAlign: TextAlign.left,
               style: TextStyle(
-                fontSize: screenWidthSize * 0.06,
+                fontSize: screenHeightSize * 0.04,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               )),
@@ -247,13 +273,13 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
             ),
             child: SmallTagBtn(
               btnName: "Edit Module list",
-              backColor: colorOrange,
+              backColor: colorBlueTeal,
               funct: () async {
                 final modules = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => EditModuleList(
-                            user: widget.user,
+                            globals: widget.globals,
                             currentModules: currentModules,
                           )),
                 );
@@ -281,26 +307,39 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
           child: buildProfileImage(),
         ),
         Positioned(
+          top: MediaQuery.of(context).size.height * 0.02,
+          left: MediaQuery.of(context).size.width * 0.05,
+          child: IconButton(
+              color: colorWhite,
+              iconSize: MediaQuery.of(context).size.height * 0.05,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.arrow_back)),
+        ),
+        Positioned(
           top: MediaQuery.of(context).size.height * 0.17,
-          left: MediaQuery.of(context).size.height * 0.42,
+          left: MediaQuery.of(context).size.width * 0.9,
           child: GestureDetector(
             onTap: () async {
               final results = await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => TutorProfileEdit(
-                          user: widget.user,
+                          globals: widget.globals,
                           image: widget.image,
                           imageExists: widget.imageExists)));
 
               setState(() {
-                widget.image = results.image;
-                widget.user = results.user;
+                if (results.image != null) {
+                  widget.image = results.image;
+                }
+                widget.globals.setUser = results.user;
               });
             },
             child: Icon(
               Icons.edit,
-              color: colorOrange,
+              color: colorBlueTeal,
               size: MediaQuery.of(context).size.height * 0.05,
             ),
           ),
@@ -320,14 +359,14 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
       );
 
   Widget buildProfileImage() => CircleAvatar(
-        radius: MediaQuery.of(context).size.width * 0.127,
+        radius: MediaQuery.of(context).size.height * 0.06,
         child: widget.imageExists
             ? ClipOval(
                 child: Image.memory(
                   widget.image,
                   fit: BoxFit.cover,
                   width: MediaQuery.of(context).size.width * 0.253,
-                  height: MediaQuery.of(context).size.width * 0.253,
+                  height: MediaQuery.of(context).size.height * 0.253,
                 ),
               )
             : ClipOval(
@@ -335,13 +374,13 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
                 "assets/Pictures/penguin.png",
                 fit: BoxFit.cover,
                 width: MediaQuery.of(context).size.width * 0.253,
-                height: MediaQuery.of(context).size.width * 0.253,
+                height: MediaQuery.of(context).size.height * 0.253,
               )),
       );
 
   Widget buildEditImageIcon() => const CircleAvatar(
         radius: 18,
-        backgroundColor: colorOrange,
+        backgroundColor: colorBlueTeal,
         child: Icon(
           Icons.camera_enhance,
           color: Colors.white,
@@ -356,7 +395,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
         Icon(
           Icons.book,
           size: MediaQuery.of(context).size.height * 0.02,
-          color: colorTurqoise,
+          color: colorOrange,
         ),
         Expanded(
           child: Text(
@@ -364,7 +403,7 @@ class _TutorSettingsProfileViewState extends State<TutorSettingsProfileView> {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: MediaQuery.of(context).size.width * 0.05,
+              fontSize: MediaQuery.of(context).size.height * 0.03,
               color: Colors.black,
             ),
           ),

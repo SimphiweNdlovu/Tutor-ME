@@ -33,9 +33,6 @@ namespace TutorMe.Migrations
                     b.Property<Guid>("TuteeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TuteeUserId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("TutorId")
                         .HasColumnType("uniqueidentifier");
 
@@ -44,8 +41,6 @@ namespace TutorMe.Migrations
                     b.HasIndex(new[] { "ModuleId" }, "IX_Connections_ModuleId");
 
                     b.HasIndex(new[] { "TuteeId" }, "IX_Connections_TuteeId");
-
-                    b.HasIndex(new[] { "TuteeUserId" }, "IX_Connections_TuteeUserId");
 
                     b.HasIndex(new[] { "TutorId" }, "IX_Connections_TutorId");
 
@@ -70,7 +65,16 @@ namespace TutorMe.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("(newid())");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("GroupId");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "ModuleId" }, "IX_Group_ModuleId");
 
@@ -134,10 +138,7 @@ namespace TutorMe.Migrations
             modelBuilder.Entity("TutorMe.Models.Module", b =>
                 {
                     b.Property<Guid>("ModuleId")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(36)
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("(newid())");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
@@ -296,6 +297,45 @@ namespace TutorMe.Migrations
                     b.ToTable("UserModule");
                 });
 
+            modelBuilder.Entity("TutorMe.Models.UserRefreshToken", b =>
+                {
+                    b.Property<int>("UserRefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserRefreshTokenId"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsInvalidated")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserRefreshTokenId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRefreshToken");
+                });
+
             modelBuilder.Entity("TutorMe.Models.UserType", b =>
                 {
                     b.Property<Guid>("UserTypeId")
@@ -346,7 +386,15 @@ namespace TutorMe.Migrations
                         .IsRequired()
                         .HasConstraintName("Group_Module_FK");
 
+                    b.HasOne("TutorMe.Models.User", "User")
+                        .WithMany("Group")
+                        .HasForeignKey("UserId")
+                        .IsRequired()
+                        .HasConstraintName("Group_User_FK");
+
                     b.Navigation("Module");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("TutorMe.Models.GroupMember", b =>
@@ -444,6 +492,17 @@ namespace TutorMe.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TutorMe.Models.UserRefreshToken", b =>
+                {
+                    b.HasOne("TutorMe.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TutorMe.Models.Group", b =>
                 {
                     b.Navigation("GroupMembers");
@@ -463,8 +522,6 @@ namespace TutorMe.Migrations
                     b.Navigation("Group");
 
                     b.Navigation("RequestModule");
-
-                    b.Navigation("UserModule");
                 });
 
             modelBuilder.Entity("TutorMe.Models.User", b =>
@@ -473,13 +530,13 @@ namespace TutorMe.Migrations
 
                     b.Navigation("ConnectionsTutor");
 
+                    b.Navigation("Group");
+
                     b.Navigation("GroupMembers");
 
                     b.Navigation("RequestsTutee");
 
                     b.Navigation("RequestsTutor");
-
-                    b.Navigation("UserModule");
                 });
 
             modelBuilder.Entity("TutorMe.Models.UserType", b =>

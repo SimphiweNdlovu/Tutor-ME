@@ -3,6 +3,8 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using TutorMe.Data;
 using TutorMe.Services;
+using TutorMe.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace TutorMe.Controllers
 {
@@ -20,45 +22,93 @@ namespace TutorMe.Controllers
             this.mapper = mapper;
         }
 
+        [Authorize]
         [HttpGet]
         public IActionResult GetAllUsers()
         {
-            var users = userService.GetAllUsers();
-            return Ok(users);
+            try {
+                var users = userService.GetAllUsers();
+                return Ok(users);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("tutors")]
         public IActionResult GetAllTutors() {
-            var users = userService.GetAllTutors();
-            return Ok(users);
+            try {
+                var users = userService.GetAllTutors();
+                return Ok(users);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("tutees")]
         public IActionResult GetAllTutees() {
-            var users = userService.GetAllTutees();
-            return Ok(users);
+            try {
+                var users = userService.GetAllTutees();
+                return Ok(users);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("admins")]
         public IActionResult GetAllAdmins() {
-            var users = userService.GetAllAdmins();
-            return Ok(users);
+            try {
+                var users = userService.GetAllAdmins();
+                return Ok(users);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetUserById(Guid id)
         {
-            var user = userService.GetUserById(id);
-            return Ok(user);
+            try {
+                var user = userService.GetUserById(id);
+                return Ok(user);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
         [HttpPost]
         public IActionResult RegisterUser(User user)
         {
-            var userId = userService.RegisterUser(user);
-            return Ok(userId);
+            try {
+                var userId = userService.RegisterUser(user);
+                return Ok(userId);
+            }
+            catch (Exception exception) {
+                return BadRequest(exception.Message);
+            }
         }
 
+        [Authorize]
+        [HttpPut("bio/{id}")]
+        public IActionResult UpdateBioByUserId(Guid id, string bio) {
+            try {
+                var user = userService.updateUserBio(id, bio);
+                return Ok(user);
+            }
+            catch (Exception e) {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [Authorize]
         [HttpPut("{id}")]
         public IActionResult UpdateUser(Guid id, User user)
         {
@@ -77,6 +127,7 @@ namespace TutorMe.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteUserById(Guid id) {
             try {
