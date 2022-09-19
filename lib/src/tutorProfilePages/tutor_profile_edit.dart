@@ -78,7 +78,9 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
   Widget buildBody() {
     final screenWidthSize = MediaQuery.of(context).size.width;
     final screenHeightSize = MediaQuery.of(context).size.height;
-    String nameToEdit = widget.globals.getUser.getName + ' ' + widget.globals.getUser.getLastName;
+    String nameToEdit = widget.globals.getUser.getName +
+        ' ' +
+        widget.globals.getUser.getLastName;
     // FilePickerResult? filePickerResult;
     // String? fileName;
     // PlatformFile? file;
@@ -152,22 +154,15 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
                 isSaveLoading = true;
               });
               if (image != null) {
-                try {
-                  await UserServices.updateProfileImage(
-                      image, widget.globals.getUser.getId, widget.globals);
-                } catch (e) {
+                
                   try {
                     await UserServices.uploadProfileImage(
-
                         image, widget.globals.getUser.getId, widget.globals);
-                  }
-                  catch(e){
-
+                  } catch (e) {
                     const snack =
                         SnackBar(content: Text("Error uploading image"));
                     ScaffoldMessenger.of(context).showSnackBar(snack);
                   }
-                }
               }
               if (bioController.text.isNotEmpty) {
                 widget.globals.getUser.setBio = bioController.text;
@@ -180,7 +175,8 @@ class _TutorProfileEditState extends State<TutorProfileEdit> {
                 isSaveLoading = false;
               });
 
-              Navigator.pop(context, ToReturn(widget.image, widget.globals.getUser));
+              Navigator.pop(
+                  context, ToReturn(widget.image, widget.globals.getUser));
             })
       ],
     );

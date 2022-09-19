@@ -273,22 +273,22 @@ class _RegisterStep1State extends State<RegisterStep1> {
                     if (emailController.text == "" ||
                         passwordController.text == "" ||
                         confirmPasswordController.text == "") {
-                      errMsg += "ERROR: One or more parametres missing\n";
+                      errMsg += "One or more parametres missing\n";
                     } else {
                       if (passwordController.text !=
                           confirmPasswordController.text) {
-                        errMsg += "ERROR: Passwords do not match\n";
+                        errMsg += "Passwords do not match\n";
                       }
 
                       if (passwordController.text.length < 8 ||
                           confirmPasswordController.text.length < 8) {
                         errMsg +=
-                            "ERROR: Password must be at least 8 characters long\n";
+                            "Password must be at least 8 characters long\n";
                       }
 
                       if (emailController.text.contains("@") == false ||
                           emailController.text.contains(".") == false) {
-                        errMsg += "ERROR: Invalid Email\n";
+                        errMsg += "Invalid Email\n";
                       }
                     }
 
@@ -297,23 +297,11 @@ class _RegisterStep1State extends State<RegisterStep1> {
                       //     await UserServices.isThereTutorByEmail(
                       //         emailController.text, );
 
-                      bool isThereTutorWithEmail = true;
-
-                      if (isThereTutorWithEmail) {
-                        errMsg +=
-                            "ERROR: A Tutor is registered with this email\n";
-                      }
                     } else {
                       // bool isThereTuteeWithEmail =
                       //     await UserServices.isThereTuteeByEmail(
                       //         emailController.text);
 
-                      bool isThereTuteeWithEmail = true;
-
-                      if (isThereTuteeWithEmail) {
-                        errMsg +=
-                            "ERROR: A Tutee is registered with this email\n";
-                      }
                     }
 
                     sendOTP();
