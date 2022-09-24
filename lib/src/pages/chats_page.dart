@@ -1,14 +1,16 @@
+import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/services/services/user_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import 'package:tutor_me/src/pages/tutors_list.dart';
 // import '../../services/models/tutors.dart';
 import '../../services/models/users.dart';
 import '../Groups/tutee_group.dart';
 import '../chat/one_to_one_chat.dart';
+import '../theme/themes.dart';
 // import 'package:tutor_me/modules/api.services.dart';
 // import 'package:tutor_me/modules/tutors.dart';
 // import 'tutorProfilePages/tutor_profile_view.dart';
@@ -29,7 +31,6 @@ class Chats extends StatefulWidget {
 
 class ChatsState extends State<Chats> {
   bool _isLoading = true;
-  List<Tutor> tutorChats = List<Tutor>.empty(growable: true);
   List<Tutee> tuteeChats = List<Tutee>.empty(growable: true);
   List<Uint8List> images = List<Uint8List>.empty(growable: true);
   List<int> hasImage = List<int>.empty(growable: true);
@@ -52,11 +53,9 @@ class ChatsState extends State<Chats> {
           widget.globals.getUser.getUserTypeID,
           widget.globals);
 
-      setState(() {
-        userChats = userChats;
-      });
       getChatsProfileImages();
     } catch (e) {
+      log(e.toString());
       getChatsProfileImages();
     }
   }
@@ -64,7 +63,7 @@ class ChatsState extends State<Chats> {
   getChatsProfileImages() async {
     for (int i = 0; i < userChats.length; i++) {
       try {
-        final image = await UserServices.getProfileImage(
+        final image = await UserServices.getTutorProfileImage(
             userChats[i].getId, widget.globals);
         setState(() {
           images.add(image);
@@ -106,6 +105,19 @@ class ChatsState extends State<Chats> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ThemeProvider>(context, listen: false);
+
+    Color textColor;
+    Color highLightColor;
+
+    if (provider.themeMode == ThemeMode.dark) {
+      textColor = colorWhite;
+      highLightColor = colorLightBlueTeal;
+    } else {
+      textColor = colorDarkGrey;
+      highLightColor = colorOrange;
+    }
+
     return Scaffold(
       body: _isLoading
           ? const Center(child: CircularProgressIndicator.adaptive())
@@ -127,9 +139,12 @@ class ChatsState extends State<Chats> {
                       Icon(
                         Icons.chat,
                         size: MediaQuery.of(context).size.height * 0.09,
-                        color: colorOrange,
+                        color: highLightColor,
                       ),
-                      const Text('No Chats found')
+                      Text(
+                        'No Chats found',
+                        style: TextStyle(color: textColor),
+                      )
                     ],
                   ),
                 ),
@@ -137,11 +152,23 @@ class ChatsState extends State<Chats> {
   }
 
   Widget _chatBuilder(BuildContext context, int i) {
+    final provider = Provider.of<ThemeProvider>(context, listen: false);
+
+  
+    Color textColor;
+
+    if (provider.themeMode == ThemeMode.dark) {
+      textColor = colorWhite;
+    } else {
+      textColor = colorDarkGrey;
+     
+    }
+
     String name;
-    if (userType.getType == "Tutors") {
+    if (userType.getType == "Tutor") {
       name = tuteeChats[i].tutee.getName + ' ' + userChats[i].getLastName;
     } else {
-      name = tutorChats[i].tutor.getName + ' ' + userChats[i].getLastName;
+      name = tuteeChats[i].tutee.getName + ' ' + userChats[i].getLastName;
     }
 
     return GestureDetector(
@@ -177,10 +204,10 @@ class ChatsState extends State<Chats> {
                                     MediaQuery.of(context).size.width * 0.18,
                               ),
                             )
-                      : tutorChats[i].hasImage
+                      : tuteeChats[i].hasImage
                           ? ClipOval(
                               child: Image.memory(
-                                tutorChats[i].image,
+                                tuteeChats[i].image,
                                 fit: BoxFit.cover,
                                 width: MediaQuery.of(context).size.width * 0.15,
                                 height:
@@ -197,8 +224,12 @@ class ChatsState extends State<Chats> {
                               ),
                             ),
                 ),
-                title: Text(name),
-                subtitle: const Text('Hi, how are you'),
+                title: Text(
+                  name,
+                  style: TextStyle(color: textColor),
+                ),
+                subtitle:  Text('Hi, how are you',
+                    style: TextStyle(color: textColor)),
                 // trailing: ,
               ),
             ],
@@ -211,10 +242,10 @@ class ChatsState extends State<Chats> {
                   globals: widget.globals,
                   image: userType.getType == 'Tutors'
                       ? tuteeChats[i].image
-                      : tutorChats[i].image,
+                      : tuteeChats[i].image,
                   hasImage: userType.getType == 'Tutors'
                       ? tuteeChats[i].hasImage
-                      : tutorChats[i].hasImage)));
+                      : tuteeChats[i].hasImage)));
         });
   }
 }

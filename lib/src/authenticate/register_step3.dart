@@ -1,12 +1,15 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutor_me/services/models/globals.dart';
 import 'package:tutor_me/services/models/intitutions.dart';
 // import 'package:tutor_me/services/models/tutors.dart';
 import 'package:tutor_me/services/services/institution_services.dart';
 import 'package:tutor_me/src/colorpallete.dart';
-import 'package:tutor_me/src/tutor_page.dart';
+import 'package:tutor_me/src/tutorVerifyShowcase/tutor_page.dart';
 // import '../../services/models/tutees.dart';
 import '../../services/services/user_services.dart';
 import '../components.dart';
@@ -64,9 +67,16 @@ class _RegisterStep3State extends State<RegisterStep3> {
             passedinInstitution,
             widget.confirmPassword,
             yearLvl!);
+
+        final globalJson = json.encode(globals.toJson());
+        SharedPreferences preferences = await SharedPreferences.getInstance();
+
+        preferences.setString('globals', globalJson);
+
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TutorPage(globals: globals)),
+          MaterialPageRoute(
+              builder: (context) => ShowCaseParent(globals: globals)),
         );
       } catch (e) {
         showDialog(
@@ -105,6 +115,11 @@ class _RegisterStep3State extends State<RegisterStep3> {
             passedinInstitution,
             widget.confirmPassword,
             yearLvl!);
+
+        final globalJson = json.encode(globals.toJson());
+        SharedPreferences preferences = await SharedPreferences.getInstance();
+
+        preferences.setString('globals', globalJson);
 
         Navigator.push(
           context,
@@ -169,7 +184,7 @@ class _RegisterStep3State extends State<RegisterStep3> {
   ];
 
   String? institution;
-  String? yearLvl;
+  String? yearLvl = 'Year - 1';
 
   bool isLoading = false;
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 // import 'package:tutor_me/src/authenticate/register_or_login.dart';
@@ -12,6 +13,7 @@ import 'package:tutor_me/src/landingPages/landing_page.dart';
 // import 'package:tutor_me/src/pages/recorded_videos.dart';
 import 'package:tutor_me/src/theme/themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutor_me/src/tutee_page.dart';
 import 'package:tutor_me/src/tutor_page.dart';
 
 //import 'src/authenticate/register_or_login.dart';
@@ -71,6 +73,7 @@ class MyAppState extends State<MyApp> {
         if (preferences != null) {
           final isFirstTime = preferences!.getBool('isFirstTime');
           if (isFirstTime == null) {
+            log('not first time');
             return MaterialApp(
               themeMode: themeProvider.themeMode,
               debugShowCheckedModeBanner: false,
@@ -96,13 +99,23 @@ class MyAppState extends State<MyApp> {
                 "Access-Control-Allow-Origin": "*",
                 'Authorization': globals.getToken,
               };
-              return MaterialApp(
-                themeMode: themeProvider.themeMode,
-                debugShowCheckedModeBanner: false,
-                theme: Themes.lightTheme,
-                darkTheme: Themes.darkTheme,
-                home: TutorPage(globals: globals),
-              );
+              if (globals.getUser.getUserTypeID[0] == '9') {
+                return MaterialApp(
+                  themeMode: themeProvider.themeMode,
+                  debugShowCheckedModeBanner: false,
+                  theme: Themes.lightTheme,
+                  darkTheme: Themes.darkTheme,
+                  home: TutorPage(globals: globals),
+                );
+              } else {
+                return MaterialApp(
+                  themeMode: themeProvider.themeMode,
+                  debugShowCheckedModeBanner: false,
+                  theme: Themes.lightTheme,
+                  darkTheme: Themes.darkTheme,
+                  home: TuteePage(globals: globals),
+                );
+              }
             }
           }
         }
