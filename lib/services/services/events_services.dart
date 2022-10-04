@@ -221,15 +221,36 @@ class EventServices {
 
   static updateGroupId(String eventId, String groupId, Globals global) async {
     try {
+      final url = Uri.parse(
+          'http://${global.getTutorMeUrl}/api/Events/groupId/$eventId?newGroupId=$groupId');
+
+      final response = await http.put(url, headers: global.getHeader);
+
+      if (response.statusCode == 200) {
+        return true;
+      } else if (response.statusCode == 401) {
+        global = await refreshToken(global);
+        return await updateGroupId(eventId, groupId, global);
+      } else {
+        throw Exception(
+            'Failed to update event group. Please make sure your internet connect is on and try again');
+      }
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  static updateVideoId(String eventId, String videoLink, Globals global) async {
+    try {
       final url = Uri.http(
-          global.getTutorMeUrl, 'api/Events/$eventId?newGroupId=$groupId');
+          global.getTutorMeUrl, 'api/Events/$eventId?newVideoLink=$videoLink');
 
       final response = await http.put(url, headers: global.getHeader);
       if (response.statusCode == 200) {
         return true;
       } else if (response.statusCode == 401) {
         global = await refreshToken(global);
-        return await updateGroupId(eventId, groupId, global);
+        return await updateGroupId(eventId, videoLink, global);
       } else {
         throw Exception(
             'Failed to update event group. Please make sure your internet connect is on and try again');

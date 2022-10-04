@@ -3,25 +3,87 @@ import 'package:provider/provider.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import 'package:tutor_me/src/theme/themes.dart';
 
-class UserStats extends StatelessWidget {
-  final int rating;
-  final int numConnections;
+class TuteeUserStats extends StatelessWidget {
   final int numTutees;
 
-  const UserStats(
+  const TuteeUserStats(
       {Key? key,
-      required this.rating,
-      required this.numTutees,
-      required this.numConnections})
+      required this.numTutees,})
       : super(key: key);
 
-  int convertRating() {
-    return rating;
-  }
+  
 
   @override
   Widget build(BuildContext context) {
-    int rating = convertRating();
+
+    final provider = Provider.of<ThemeProvider>(context, listen: false);
+
+    Color secondaryTextColor;
+
+    if (provider.themeMode == ThemeMode.dark) {
+      secondaryTextColor = colorGrey;
+    } else {
+      secondaryTextColor = colorOrange;
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        buildButton(
+            text: '  Tutors', value: numTutees, color: secondaryTextColor),
+       
+      ],
+    );
+  }
+
+ 
+
+  buildButton(
+      {required String text, required int value, required Color color}) {
+    return MaterialButton(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      onPressed: () {},
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value.toString(),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+              color: colorBlueTeal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TutorUserStats extends StatelessWidget {
+  final int rating;
+  final int numTutees;
+
+  const TutorUserStats(
+      {Key? key,
+      required this.rating,
+      required this.numTutees,})
+      : super(key: key);
+
+  
+
+  @override
+  Widget build(BuildContext context) {
 
     final provider = Provider.of<ThemeProvider>(context, listen: false);
 
@@ -39,11 +101,7 @@ class UserStats extends StatelessWidget {
         buildDivider(),
         buildButton(
             text: '  Tutors', value: numTutees, color: secondaryTextColor),
-        buildDivider(),
-        buildButton(
-            text: '  Connections',
-            value: numConnections,
-            color: secondaryTextColor),
+       
       ],
     );
   }

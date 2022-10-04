@@ -246,6 +246,25 @@ class AdminServices {
     }
   }
 
+  static verifyUser(String id, Globals global) async {
+    try {
+      final adminsURL = Uri.parse(
+          'http://${global.getTutorMeUrl}/api/Users/validate/$id?isValidated=true');
+      final response = await http.put(adminsURL, headers: global.getHeader);
+      log(response.body);
+      if (response.statusCode == 200) {
+        return true;
+      } else if (response.statusCode == 401) {
+        global = await refreshToken(global);
+        return await verifyUser(id, global);
+      } else {
+        throw Exception('Failed to upload ' + response.statusCode.toString());
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   static Future getAdmin(String id, Globals global) async {
     Uri tutorURL = Uri.http(global.getTutorMeUrl, '/api/Admins/$id');
     try {
@@ -282,6 +301,39 @@ class AdminServices {
       'email': email,
       'password': password,
       'typeId': '475ED4B3-D159-4FDF-B6D1-D37C14AB8A60'
+    });
+    final header = <String, String>{
+      'Content-Type': 'application/json; charset=utf-8',
+    };
+    Globals tempGlobals = Globals(null, '', '');
+    try {
+      final modulesURL = Uri.parse(
+          'http://${tempGlobals.getTutorMeUrl}/api/account/authtoken');
+      final response = await http.post(modulesURL, headers: header, body: data);
+      log(response.statusCode.toString());
+      if (response.statusCode == 401) {
+        final change = await logInSuperAdmin(email, password);
+        return change;
+      }
+      if (response.statusCode == 200) {
+        final Users admin = Users.fromObject(jsonDecode(response.body)['user']);
+        Globals global = Globals(admin, json.decode(response.body)['token'],
+            json.decode(response.body)['refreshToken']);
+
+        return global;
+      } else {
+        throw Exception('Failed to log in' + response.statusCode.toString());
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static logInSuperAdmin(String email, String password) async {
+    String data = jsonEncode({
+      'email': email,
+      'password': password,
+      'typeId': '033CF7DF-33E7-49D3-A91B-82EBF7C612B0'
     });
     final header = <String, String>{
       'Content-Type': 'application/json; charset=utf-8',

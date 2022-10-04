@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutor_me/src/colorpallete.dart';
 import 'package:tutor_me/src/tutorProfilePages/tutor_profile_view.dart';
 import '../../services/models/globals.dart';
@@ -40,18 +40,11 @@ class Chat extends StatefulWidget {
 }
 
 class ChatState extends State<Chat> {
+  SharedPreferences? prefs;
   @override
   void initState() {
     super.initState();
     openSignalRConnection();
-    createRandomId();
-  }
-
-  int currentUserId = 0;
-  //generate random user id
-  createRandomId() {
-    Random random = Random();
-    currentUserId = random.nextInt(999999);
   }
 
   String removeMessageExtraChar(String userText) {
@@ -78,7 +71,6 @@ class ChatState extends State<Chat> {
       widget.globals.getUser.getId,
       widget.reciever.getId,
       widget.globals.getUser.getName,
-      currentUserId,
       messageText
     ]);
     messageTextController.text = "";
@@ -99,7 +91,7 @@ class ChatState extends State<Chat> {
       appBar: AppBar(
         backgroundColor: colorBlueTeal,
         title: InkWell(
-          onTap: widget.reciever.getUserTypeID[0] == '7'
+          onTap: widget.reciever.getUserTypeID[0] == '9'
               ? () {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (BuildContext context) => TutorProfilePageView(
@@ -156,8 +148,8 @@ class ChatState extends State<Chat> {
         width: size.width,
         child: Column(
           children: [
-            chatMessageWidget(
-                chatListScrollController, messageModel, currentUserId),
+            chatMessageWidget(chatListScrollController, messageModel,
+                widget.globals.getUser.getId),
             chatTypeMessageWidget(messageTextController, submitMessageFunction)
           ],
         ),
@@ -168,13 +160,31 @@ class ChatState extends State<Chat> {
   //set url and configs
   final connection = HubConnectionBuilder()
       .withUrl(
-          // 'http://tutormechatapi-prod.us-east-1.elasticbeanstalk.com/chatHub',
-          'http://192.168.42.155:500/chatHub',
+          'http://tutormechathub.us-east-1.elasticbeanstalk.com/chatHub',
+          // 'http://192.168.42.155:500/chatHub',
           HttpConnectionOptions())
       .build();
 
   //connect to signalR
   Future<void> openSignalRConnection() async {
+    prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs?.getString('lastDate');
+    if (lastDate != null) {
+      final lastDateParsed = DateTime.parse(lastDate);
+      final now = DateTime.now();
+      final difference = now.difference(lastDateParsed);
+      if (difference.inDays > 0) {
+        await prefs?.setString('lastDate', now.toString());
+        await prefs?.setInt('interactionCount', 1);
+      } else {
+        final interactionCount = prefs?.getInt('interactionCount');
+        await prefs?.setInt('interactionCount', interactionCount! + 1);
+      }
+    } else {
+      await prefs?.setString('lastDate', DateTime.now().toString());
+      await prefs?.setInt('interactionCount', 1);
+    }
+
     await connection.start();
     connection.on('ReceiveMessage', (message) {
       _handleIncommingDriverLocation(message);

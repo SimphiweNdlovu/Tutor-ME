@@ -1,13 +1,19 @@
 // ignore_for_file: non_constant_identifier_names, dead_code
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutor_me/services/models/globals.dart';
+import 'package:tutor_me/services/models/user_badges.dart';
 import 'package:tutor_me/services/services/group_services.dart';
+import 'package:tutor_me/src/Groups/add_tutees.dart';
+import 'package:tutor_me/services/services/user_badges.dart';
 // import 'package:tutor_me/src/chat/group_chat.dart';
 import 'package:tutor_me/src/colorpallete.dart';
+import '../../services/models/badges.dart';
 import '../../services/models/modules.dart';
 import '../pages/chat_page.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,11 +37,12 @@ class Tutee {
   Tutee(this.tutee, this.image, this.hasImage);
 }
 
+// ignore: must_be_immutable
 class TutorGroupPage extends StatefulWidget {
-  final Groups group;
+  Groups group;
   final Globals globals;
   final Modules module;
-  const TutorGroupPage(
+  TutorGroupPage(
       {Key? key,
       required this.group,
       required this.globals,
@@ -54,12 +61,16 @@ class TutorGroupPageState extends State<TutorGroupPage> {
   List<Uint8List> tuteeImages = List<Uint8List>.empty(growable: true);
   List<int> hasImage = List<int>.empty(growable: true);
   bool _isLoading = true;
+  SharedPreferences? prefs;
+  bool isEditing = false;
 
   bool hasTutees = false;
   String _token = "";
   String _meetingID = "";
 
   getTutees() async {
+    prefs = await SharedPreferences.getInstance();
+
     fetchToken().then((token) => setState(() => _token = token));
     try {
       final tutees = await GroupServices.getGroupTutees(
@@ -124,6 +135,7 @@ class TutorGroupPageState extends State<TutorGroupPage> {
     double screenWidth = MediaQuery.of(context).size.height;
 
     final provider = Provider.of<ThemeProvider>(context, listen: false);
+    TextEditingController controller = TextEditingController();
 
     Color primaryColor;
     Color textColor;
@@ -140,14 +152,24 @@ class TutorGroupPageState extends State<TutorGroupPage> {
     }
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddTutees(
+                        group: widget.group,
+                        globals: widget.globals,
+                        tutees: tutees)));
+          },
+          label: const Text('Add tutees'),
+          backgroundColor: colorOrange,
+          icon: const Icon(Icons.add)),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(screenHeight * 0.08),
         child: AppBar(
           title: Text(widget.module.getCode + '- Group'),
           backgroundColor: primaryColor,
-          actions: [
-            IconButton(onPressed: () {}, icon: const Icon(Icons.settings))
-          ],
           centerTitle: true,
         ),
       ),
@@ -157,82 +179,159 @@ class TutorGroupPageState extends State<TutorGroupPage> {
             )
           : SingleChildScrollView(
               child: SizedBox(
-                height: screenHeight * 0.9,
+                // height: screenHeight * 0.9,
                 width: screenWidth * 0.9,
                 child: Column(
                   children: <Widget>[
                     SizedBox(
                       height: screenHeight * 0.04,
                     ),
-                    Container(
-                      color: Colors.grey.withOpacity(0.2),
-                      height: screenHeight * 0.2,
-                      width: screenWidth * 0.42,
-                      padding: EdgeInsets.only(
-                          top: screenHeight * 0.02,
-                          bottom: screenHeight * 0.02,
-                          left: screenWidth * 0.02,
-                          right: screenWidth * 0.02),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                'Group Header:',
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                    color: textColor,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: screenHeight * 0.03,
-                                    decoration: TextDecoration.underline),
+                    Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: MediaQuery.of(context).size.width * 0.05),
+                          child: Container(
+                            width: screenWidth * 0.03,
+                            height: screenHeight * 0.2,
+                            decoration: const BoxDecoration(
+                              image: DecorationImage(
+                                image: AssetImage('assets/Pictures/group.jpg'),
+                                fit: BoxFit.cover,
                               ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: Icon(
-                                  Icons.edit,
-                                  color: highLightColor,
-                                  size: screenHeight * 0.045,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          height: screenHeight * 0.2,
+                          width: screenWidth * 0.40,
+                          padding: EdgeInsets.only(
+                              top: screenHeight * 0.02,
+                              bottom: screenHeight * 0.02,
+                              left: screenWidth * 0.02,
+                              right: screenWidth * 0.02),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                                bottomRight: Radius.circular(
+                                    MediaQuery.of(context).size.width * 0.02),
+                                topRight: Radius.circular(
+                                    MediaQuery.of(context).size.width * 0.02)),
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Text(
+                                    'Group Header:',
+                                    textAlign: TextAlign.left,
+                                    style: TextStyle(
+                                        color: textColor,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: screenHeight * 0.03,
+                                        decoration: TextDecoration.underline),
+                                  ),
+                                  IconButton(
+                                      onPressed: () async {
+                                        setState(() {
+                                          isEditing = !isEditing;
+                                        });
+
+                                      },
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: highLightColor,
+                                      ))
+                                ],
+                              ),
+                              SizedBox(
+                                height: screenHeight * 0.01,
+                              ),
+                              Flexible(
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints.expand(),
+                                  child: Theme(
+                                      data: Theme.of(context).copyWith(
+                                          scrollbarTheme: ScrollbarThemeData(
+                                              thumbColor:
+                                                  MaterialStateProperty.all(
+                                                      colorOrange))),
+                                      child: Scrollbar(
+                                        child: isEditing
+                                            ? TextField(
+                                                controller: controller,
+                                                maxLines: 1,
+                                                decoration: InputDecoration(
+                                                  hintText: 'Edit the header',
+                                                  suffixIcon: IconButton(
+                                                    icon:
+                                                        const Icon(Icons.done),
+                                                    onPressed: () async {
+                                                      try {
+                                                        if (controller
+                                                            .text.isNotEmpty) {
+                                                              const snackBar = SnackBar(content: Text('Header updating!'));
+                                                              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                                          await GroupServices
+                                                              .updateGroupDescription(
+                                                                  controller
+                                                                      .text,
+                                                                  widget.group,
+                                                                  widget
+                                                                      .globals);
+                                                          setState(() {
+                                                            isEditing = false;
+                                                            widget.group
+                                                                    .setDescription =
+                                                                controller.text;
+                                                          });
+                                                        } else {
+                                                          setState(() {
+                                                            isEditing = false;
+                                                          });
+                                                        }
+                                                      } catch (e) {
+                                                        const snackBar =
+                                                            SnackBar(
+                                                          content: Text(
+                                                              'Error updating group description'),
+                                                        );
+                                                        ScaffoldMessenger.of(
+                                                                context)
+                                                            .showSnackBar(
+                                                                snackBar);
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              )
+                                            : Text(
+                                                widget.group.getDescription,
+                                                textAlign: TextAlign.left,
+                                                style: TextStyle(
+                                                    color: textColor,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize:
+                                                        screenHeight * 0.02),
+                                              ),
+                                      )),
                                 ),
-                              )
+                              ),
                             ],
                           ),
-                          SizedBox(
-                            height: screenHeight * 0.01,
-                          ),
-                          Flexible(
-                            child: ConstrainedBox(
-                                constraints: const BoxConstraints.expand(),
-                                child: Theme(
-                                  data: Theme.of(context).copyWith(
-                                      scrollbarTheme: ScrollbarThemeData(
-                                          thumbColor: MaterialStateProperty.all(
-                                              highLightColor))),
-                                  child: Scrollbar(
-                                    child: ListView.separated(
-                                        physics: const BouncingScrollPhysics(),
-                                        itemBuilder: pointBuilder,
-                                        separatorBuilder: (context, index) {
-                                          return SizedBox(
-                                            height: screenHeight * 0.01,
-                                          );
-                                        },
-                                        itemCount: 1),
-                                  ),
-                                )),
-                          )
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     SizedBox(
                       height: screenHeight * 0.03,
                     ),
                     SizedBox(
                       width: screenWidth * 0.8,
-                      height: screenHeight * 0.35,
+                      height: screenHeight * 0.39,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -250,7 +349,7 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                               elevation: 0,
                               color: Colors.transparent,
                               child: ListTile(
-                                horizontalTitleGap: screenHeight * 0.04,
+                                horizontalTitleGap: screenHeight * 0.02,
                                 leading: Icon(
                                   Icons.chat,
                                   size: screenHeight * 0.06,
@@ -266,27 +365,129 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                                               0.025),
                                 ),
                                 subtitle: const Text('2 new msgs!'),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: highLightColor,
+                                ),
                               ),
                             ),
                           ),
                           InkWell(
                             onTap: () async {
+                              final lastDate = prefs?.getString('lastDate');
+                              if (lastDate != null) {
+                                final lastDateParsed = DateTime.parse(lastDate);
+                                final now = DateTime.now();
+                                final difference =
+                                    now.difference(lastDateParsed);
+                                if (difference.inDays > 0) {
+                                  await prefs?.setString(
+                                      'lastDate', now.toString());
+                                  await prefs?.setInt('meetingCount', 1);
+                                } else {
+                                  final meetingCount =
+                                      prefs?.getInt('meetingCount');
+                                  await prefs?.setInt(
+                                      'meetingCount', meetingCount! + 1);
+                                }
+                              } else {
+                                await prefs?.setString(
+                                    'lastDate', DateTime.now().toString());
+                                await prefs?.setInt('meetingCount', 1);
+                              }
+
                               try {
+                                const SnackBar snackBar =
+                                    SnackBar(content: Text('Initializing...'));
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(snackBar);
                                 _meetingID = await createMeeting();
                                 await GroupServices.updateGroupVideoId(
                                     _meetingID, widget.group, widget.globals);
+
                                 Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MeetingScreen(
-                                      token: _token,
-                                      meetingId: _meetingID,
-                                      displayName: "Tutor",
-                                      group: widget.group,
-                                      globals: widget.globals,
-                                    ),
-                                  ),
-                                );
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MeetingScreen(
+                                        token: _token,
+                                        meetingId: _meetingID,
+                                        displayName: "Tutor",
+                                        group: widget.group,
+                                        globals: widget.globals,
+                                      ),
+                                    ));
+                                List<Badge> fetchedBadges =
+                                    List<Badge>.empty(growable: true);
+                                for (var badge in widget.globals.getBadges) {
+                                  if (badge.getName.contains('Meetings')) {
+                                    fetchedBadges.add(badge);
+                                  }
+                                }
+
+                                List<UserBadge> userBadges =
+                                    List<UserBadge>.empty(growable: true);
+
+                                userBadges =
+                                    await UserBadges.getAllUserBadgesByUserId(
+                                        widget.globals);
+
+                                bool isThere = false;
+                                int index = 0;
+
+                                for (int k = 0; k < userBadges.length; k++) {
+                                  for (int j = 0;
+                                      j < fetchedBadges.length;
+                                      j++) {
+                                    if (userBadges[k].getBadgeId ==
+                                        fetchedBadges[j].getBadgeId) {
+                                      isThere = true;
+                                      await UserBadges.updateUserBadge(
+                                          widget.globals.getUser.getId,
+                                          userBadges[k].getBadgeId,
+                                          userBadges[k].getPointAchieved + 1,
+                                          widget.globals);
+                                      break;
+                                    }
+                                  }
+                                  if (isThere == false) {
+                                    await UserBadges.addUserBadge(
+                                        widget.globals.getUser.getId,
+                                        fetchedBadges[index].getBadgeId,
+                                        1,
+                                        widget.globals);
+                                    break;
+                                  }
+                                  try {} catch (e) {
+                                    log(e.toString());
+                                  }
+
+                                  try {
+                                    _meetingID = await createMeeting();
+                                    await GroupServices.updateGroupVideoId(
+                                        _meetingID,
+                                        widget.group,
+                                        widget.globals);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => MeetingScreen(
+                                          token: _token,
+                                          meetingId: _meetingID,
+                                          displayName: "Tutor",
+                                          group: widget.group,
+                                          globals: widget.globals,
+                                        ),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    const snackBar = SnackBar(
+                                      content:
+                                          Text('Failed to start live video'),
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
+                                  }
+                                }
                               } catch (e) {
                                 const snackBar = SnackBar(
                                   content: Text('Failed to start live video'),
@@ -299,12 +500,12 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                               elevation: 0,
                               color: Colors.transparent,
                               child: ListTile(
-                                horizontalTitleGap: screenHeight * 0.04,
+                                horizontalTitleGap: screenHeight * 0.02,
                                 leading: Stack(children: [
                                   Icon(
                                     Icons.chat_bubble,
                                     size: screenHeight * 0.06,
-                                    color: highLightColor,
+                                    color: primaryColor,
                                   ),
                                   Positioned(
                                       top: screenHeight * 0.01,
@@ -323,6 +524,10 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                                           MediaQuery.of(context).size.height *
                                               0.025),
                                 ),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: highLightColor,
+                                ),
                               ),
                             ),
                           ),
@@ -339,12 +544,12 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                               elevation: 0,
                               color: Colors.transparent,
                               child: ListTile(
-                                horizontalTitleGap: screenHeight * 0.04,
+                                horizontalTitleGap: screenHeight * 0.02,
                                 leading: Stack(children: [
                                   Icon(
                                     Icons.chat_bubble,
                                     size: screenHeight * 0.06,
-                                    color: colorOrange,
+                                    color: primaryColor,
                                   ),
                                   Positioned(
                                       top: screenHeight * 0.01,
@@ -363,17 +568,19 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                                           MediaQuery.of(context).size.height *
                                               0.025),
                                 ),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: highLightColor,
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            height: screenHeight * 0.06,
                           ),
                         ],
                       ),
                     ),
                     SizedBox(
                       width: screenWidth * 0.5,
+                      // height: screenHeight * 0.5,
                       child: Padding(
                         padding: EdgeInsets.only(left: screenWidth * 0.03),
                         child: Text(
@@ -388,7 +595,7 @@ class TutorGroupPageState extends State<TutorGroupPage> {
                       ),
                     ),
                     SizedBox(
-                      height: screenHeight * 0.25,
+                      height: screenHeight * 0.20,
                       width: screenWidth * 0.5,
                       child: hasTutees
                           ? ListView.separated(

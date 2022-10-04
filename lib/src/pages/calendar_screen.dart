@@ -11,7 +11,6 @@ import '../../services/services/events_services.dart';
 import '../../services/services/user_services.dart';
 import '../theme/themes.dart';
 
-// TODO:  fix file names
 class CalendarScreen extends StatefulWidget {
   final Globals globals;
   const CalendarScreen({Key? key, required this.globals}) : super(key: key);
@@ -25,6 +24,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   bool isLoading = true;
   List<Users> owner = List<Users>.empty(growable: true);
   DateTime timeSelected = DateTime.now();
+  TimeOfDay timeofDay = const TimeOfDay(hour: 0, minute: 0);
 
   getUserEvents() async {
     try {
@@ -43,7 +43,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       for (int i = 0; i < events.length; i++) {
         final incomingOwner =
             await UserServices.getTutor(events[i].getOwnerId, widget.globals);
-        owner += incomingOwner;
+        owner.add(incomingOwner);
       }
     } catch (e) {
       const snack = SnackBar(content: Text('Error loading events'));
@@ -290,6 +290,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                     MaterialPageRoute(
                                       builder: (context) => InviteToMeeting(
                                         globals: widget.globals,
+                                        event: e,
                                       ),
                                     ),
                                   );
@@ -311,14 +312,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       content: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.3,
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Text(
                               'For: ' +
-                                  DateTime(
-                                          mySelectedDay.year,
-                                          mySelectedDay.month,
-                                          mySelectedDay.day)
-                                      .toString(),
+                                  mySelectedDay.year.toString() +
+                                  '-' +
+                                  mySelectedDay.month.toString() +
+                                  '-' +
+                                  mySelectedDay.day.toString(),
                               style: const TextStyle(
                                 color: colorLightGreen,
                               ),
@@ -333,11 +335,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               decoration: const InputDecoration(
                                   labelText: 'Meeting Description'),
                             ),
-                            TextFormField(
-                              controller: timeController,
-                              decoration: const InputDecoration(
-                                  labelText: 'Meeting Time'),
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.02,
                             ),
+                            Row(
+                              children: [
+                                ElevatedButton(
+                                    onPressed: (() async {
+                                      TimeOfDay? newTime = await showTimePicker(
+                                        context: context,
+                                        initialTime: timeofDay,
+                                      );
+
+                                      if (newTime == null) return;
+
+                                      setState(() {
+                                        timeofDay = newTime;
+                                      });
+                                    }),
+                                    child: const Text('Time')),
+                              ],
+                            )
+
+                            // TextFormField(
+                            //   controller: timeController,
+                            //   decoration: const InputDecoration(
+                            //       labelText: 'Meeting Time'),
+                            // ),
                           ],
                         ),
                       ),
@@ -372,7 +396,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 DateTime(mySelectedDay.year,
                                         mySelectedDay.month, mySelectedDay.day)
                                     .toString(),
-                                timeController.text,
+                                timeofDay.format(context),
                                 "",
                                 "",
                                 "",
@@ -441,7 +465,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                   )),
           backgroundColor: highLightColor,
-          child: const Icon(Icons.add),
+          child: const Icon(
+            Icons.add,
+            // size: MediaQuery.of(context).size.height * 0.,
+          ),
         ),
       ),
     );

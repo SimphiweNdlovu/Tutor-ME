@@ -223,7 +223,9 @@ class GroupServices {
 
     try {
       final response = await http.get(url, headers: global.getHeader);
+      log(response.statusCode.toString());
       if (response.statusCode == 200) {
+        log(response.body);
         String j = "";
         if (response.body[0] != "[") {
           j = "[" + response.body + "]";
@@ -243,20 +245,37 @@ class GroupServices {
     }
   }
 
+  static addTuteeToGroup(String tuteeId, String groupId, Globals global) async {
+    String data = jsonEncode(
+        {"groupMemberId": groupId, "groupId": groupId, "userId": tuteeId});
+
+    Uri url = Uri.http(global.getTutorMeUrl, 'api/GroupMembers/');
+    try {
+      final response =
+          await http.post(url, headers: global.getHeader, body: data);
+      log(response.statusCode.toString());
+      if (response.statusCode == 200) {
+        return true;
+      } else if (response.statusCode == 401) {
+        global = await refreshToken(global);
+        return await addTuteeToGroup(tuteeId, groupId, global);
+      } else {
+        throw Exception('Failed to load' + response.body);
+      }
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
   static updateGroupDescription(
       String description, Groups group, Globals global) async {
-    // String data = jsonEncode({
-    //   'id': group.getId,
-    //   'description': group.getDescription,
-    // });
-
     try {
       final id = group.getId;
       final modulesURL = Uri.parse(
-          'http://${global.getTutorMeUrl}/api/Groups/description/$id');
-      final response =
-          await http.put(modulesURL, headers: global.header, body: description);
-      if (response.statusCode == 204) {
+          'http://${global.getTutorMeUrl}/api/Groups/description/$id?description=$description');
+      final response = await http.put(modulesURL, headers: global.header);
+     
+      if (response.statusCode == 200) {
         return group;
       } else if (response.statusCode == 401) {
         global = await refreshToken(global);
@@ -343,4 +362,6 @@ class GroupServices {
       throw Exception('Failed to refresh token');
     }
   }
+
+  static getGroupByUserID(String getId, Globals globals) {}
 }

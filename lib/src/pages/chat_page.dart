@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutor_me/services/models/groups.dart';
 // import 'package:tutor_me/services/models/tutors.dart';
 
@@ -33,19 +33,12 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   late Modules module;
+  SharedPreferences? prefs;
 
   @override
   void initState() {
     super.initState();
     openSignalRConnection();
-    createRandomId();
-  }
-
-  int currentUserId = 0;
-  //generate random user id
-  createRandomId() {
-    Random random = Random();
-    currentUserId = random.nextInt(999999);
   }
 
   String removeMessageExtraChar(String userText) {
@@ -71,7 +64,7 @@ class _ChatPageState extends State<ChatPage> {
     await connection.invoke('SendMessageToGroup', args: [
       widget.group.getId,
       widget.globals.getUser.getName,
-      currentUserId,
+      widget.globals.getUser.getId,
       messageText
     ]);
     messageTextController.text = "";
@@ -91,10 +84,8 @@ class _ChatPageState extends State<ChatPage> {
     Color secondaryColor;
 
     if (provider.themeMode == ThemeMode.dark) {
- 
       secondaryColor = colorLightGrey;
     } else {
-   
       secondaryColor = colorWhite;
     }
 
@@ -107,8 +98,8 @@ class _ChatPageState extends State<ChatPage> {
         child: Column(
           children: [
             chatAppbarWidget(size, context, widget.moduleCode),
-            chatMessageWidget(
-                chatListScrollController, messageModel, currentUserId),
+            chatMessageWidget(chatListScrollController, messageModel,
+                widget.globals.getUser.getId),
             chatTypeMessageWidget(messageTextController, submitMessageFunction)
           ],
         ),
@@ -119,13 +110,31 @@ class _ChatPageState extends State<ChatPage> {
   //set url and configs
   final connection = HubConnectionBuilder()
       .withUrl(
-          // 'http://tutormechatapi-prod.us-east-1.elasticbeanstalk.com/chatHub',
-          'http://192.168.42.155:500/chatHub',
+          'http://tutormechathub.us-east-1.elasticbeanstalk.com/chatHub',
+          // 'http://192.168.42.155:500/chatHub',
           HttpConnectionOptions())
       .build();
 
   //connect to signalR
   Future<void> openSignalRConnection() async {
+    prefs = await SharedPreferences.getInstance();
+    final lastDate = prefs?.getString('lastDate');
+    if (lastDate != null) {
+      final lastDateParsed = DateTime.parse(lastDate);
+      final now = DateTime.now();
+      final difference = now.difference(lastDateParsed);
+      if (difference.inDays > 0) {
+        await prefs?.setString('lastDate', now.toString());
+        await prefs?.setInt('interactionCount', 1);
+      } else {
+        final interactionCount = prefs?.getInt('interactionCount');
+        await prefs?.setInt('interactionCount', interactionCount! + 1);
+      }
+    } else {
+      await prefs?.setString('lastDate', DateTime.now().toString());
+      await prefs?.setInt('interactionCount', 1);
+    }
+
     await connection.start();
     connection.on('ReceiveMessage', (message) {
       _handleIncommingDriverLocation(message);
@@ -134,7 +143,7 @@ class _ChatPageState extends State<ChatPage> {
       widget.moduleCode,
       widget.group.getId,
       widget.globals.getUser.getName,
-      currentUserId
+      widget.globals.getUser.getId
     ]);
   }
 
